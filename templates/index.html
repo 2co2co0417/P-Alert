@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h4 fw-bold">気圧変化に、先回り。</h1>
+    <p class="mb-3 text-muted">P-Alertは、気圧変化が大きい予報のときに通知し、体調ログも残せるアプリです。</p>
+
+    {% if user %}
+      <a class="btn btn-primary w-100" href="{{ url_for('dashboard') }}">ダッシュボードへ</a>
+    {% else %}
+      <div class="d-grid gap-2">
+        <a class="btn btn-primary" href="{{ url_for('register') }}">新規登録</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('login') }}">ログイン</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
