@@ -83,4 +83,71 @@ def index():
         "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
         (current_user_id(),)
     ).fetchall()
-    conn
+    conn.close()
+
+    return render_template("index.html", logs=logs)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # ここは「ログイン専用ページ」表示
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        conn = get_conn()
+        user = conn.execute("SELECT id, pw_hash FROM users WHERE email = ?", (email,)).fetchone()
+        conn.close()
+
+        if not user or not check_password_hash(user["pw_hash"], password):
+            flash("メールまたはパスワードが違います")
+            return redirect(url_for("login"))
+
+        session["user_id"] = user["id"]
+        flash("ログインしました")
+        return redirect(url_for("index"))
+
+    return render_template("auth.html", mode="login")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    # ここは「新規登録ページ」表示（テンプレートは同じ auth.html を使う）
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("メールとパスワードは必須です")
+            return redirect(url_for("register"))
+
+        pw_hash = generate_password_hash(password)
+
+        try:
+            conn = get_conn()
+            conn.execute(
+                "INSERT INTO users (email, pw_hash, created_at) VALUES (?, ?, ?)",
+                (email, pw_hash, datetime.now().isoformat(timespec="seconds"))
+            )
+            conn.commit()
+            conn.close()
+        except sqlite3.IntegrityError:
+            flash("そのメールは既に登録されています")
+            return redirect(url_for("register"))
+
+        flash("登録しました。ログインしてください。")
+        return redirect(url_for("login"))
+
+    return render_template("auth.html", mode="register")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("ログアウトしました")
+    return redirect(url_for("login"))
+
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True)
