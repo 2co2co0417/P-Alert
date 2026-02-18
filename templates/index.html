@@ -7,7 +7,10 @@
 </head>
 <body style="font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px;">
 
-  <h1>P-Alert MVP</h1>
+  <div style="display:flex; justify-content: space-between; align-items:center;">
+    <h1>P-Alert MVP</h1>
+    <a href="/logout">ログアウト</a>
+  </div>
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -19,73 +22,33 @@
     {% endif %}
   {% endwith %}
 
-  {% if mode == "register" %}
-    <h2>新規登録</h2>
-    <form method="post" action="/register">
-      <div style="margin: 8px 0;">
-        <label>メール：</label><br>
-        <input name="email" type="email" required style="width:100%; padding:10px;">
-      </div>
-      <div style="margin: 8px 0;">
-        <label>パスワード：</label><br>
-        <input name="password" type="password" required style="width:100%; padding:10px;">
-      </div>
-      <button type="submit" style="padding:10px 16px;">登録</button>
-    </form>
-    <p style="margin-top:12px;">
-      <a href="/login">ログインへ</a>
-    </p>
+  <h2>体調記録</h2>
 
-  {% elif mode == "login" or not session.get("user_id") %}
-    <h2>ログイン</h2>
-    <form method="post" action="/login">
-      <div style="margin: 8px 0;">
-        <label>メール：</label><br>
-        <input name="email" type="email" required style="width:100%; padding:10px;">
-      </div>
-      <div style="margin: 8px 0;">
-        <label>パスワード：</label><br>
-        <input name="password" type="password" required style="width:100%; padding:10px;">
-      </div>
-      <button type="submit" style="padding:10px 16px;">ログイン</button>
-    </form>
-    <p style="margin-top:12px;">
-      <a href="/register">新規登録へ</a>
-    </p>
-
-  {% else %}
-    <div style="display:flex; justify-content: space-between; align-items:center;">
-      <h2>体調記録</h2>
-      <a href="/logout">ログアウト</a>
+  <form method="post" action="/" style="background:#f7fbff; padding:12px; border-radius:10px;">
+    <div style="margin: 8px 0;">
+      <label>体調スコア（1〜10）：</label><br>
+      <input name="score" type="number" min="1" max="10" required style="width:100%; padding:10px;">
     </div>
+    <div style="margin: 8px 0;">
+      <label>メモ（任意）：</label><br>
+      <textarea name="note" rows="3" style="width:100%; padding:10px;"></textarea>
+    </div>
+    <button type="submit" style="padding:10px 16px;">記録する</button>
+  </form>
 
-    <form method="post" action="/" style="background:#f7fbff; padding:12px; border-radius:10px;">
-      <div style="margin: 8px 0;">
-        <label>体調スコア（1〜10）：</label><br>
-        <input name="score" type="number" min="1" max="10" required style="width:100%; padding:10px;">
-      </div>
-      <div style="margin: 8px 0;">
-        <label>メモ（任意）：</label><br>
-        <textarea name="note" rows="3" style="width:100%; padding:10px;"></textarea>
-      </div>
-      <button type="submit" style="padding:10px 16px;">記録する</button>
-    </form>
-
-    <h2 style="margin-top: 18px;">履歴（最新50件）</h2>
-    {% if logs %}
-      <ul>
-        {% for row in logs %}
-          <li style="margin: 10px 0;">
-            <div><strong>{{ row["log_at"] }}</strong></div>
-            <div>スコア：{{ row["score"] }}</div>
-            <div>メモ：{{ row["note"] or "" }}</div>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>まだ記録がありません。</p>
-    {% endif %}
-
+  <h2 style="margin-top: 18px;">履歴（最新50件）</h2>
+  {% if logs %}
+    <ul>
+      {% for row in logs %}
+        <li style="margin: 10px 0;">
+          <div><strong>{{ row["log_at"] }}</strong></div>
+          <div>スコア：{{ row["score"] }}</div>
+          <div>メモ：{{ row["note"] or "" }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>まだ記録がありません。</p>
   {% endif %}
 
 </body>
