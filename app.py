@@ -54,11 +54,21 @@ def current_user_id():
     return session.get("user_id")
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
     if not current_user_id():
         return redirect(url_for("login"))
 
+    # 気圧ダッシュボードだけ表示
+    return render_template("index.html")
+
+
+@app.route("/health", methods=["GET", "POST"])
+def health():
+    if not current_user_id():
+        return redirect(url_for("login"))
+
+    # POST（登録）
     if request.method == "POST":
         score = request.form.get("score", "").strip()
         note = request.form.get("note", "").strip()
@@ -67,11 +77,11 @@ def index():
             score_int = int(score)
         except ValueError:
             flash("体調スコアは整数で入力してください（例：1〜10）")
-            return redirect(url_for("index"))
+            return redirect(url_for("health"))
 
         if score_int < 1 or score_int > 10:
             flash("体調スコアは 1〜10 の範囲で入力してください")
-            return redirect(url_for("index"))
+            return redirect(url_for("health"))
 
         conn = get_conn()
         conn.execute(
@@ -82,8 +92,9 @@ def index():
         conn.close()
 
         flash("記録しました")
-        return redirect(url_for("index"))
+        return redirect(url_for("health"))
 
+    # GET（表示）
     conn = get_conn()
     logs = conn.execute(
         "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
@@ -91,7 +102,7 @@ def index():
     ).fetchall()
     conn.close()
 
-    return render_template("index.html", logs=logs)
+    return render_template("health.html", logs=logs)
 
 
 @app.route("/login", methods=["GET", "POST"])
