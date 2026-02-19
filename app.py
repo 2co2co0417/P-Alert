@@ -1,192 +1,185 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+import sqlite3
+from datetime import datetime, timedelta
+import os
+import random
+from werkzeug.security import generate_password_hash, check_password_hash
 
-from config import Config
-from models import db, User, SymptomLog
-from services import fetch_pressure_forecast, pressure_change_max
-from tasks import run_pressure_alert_check
 
-def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
+app = Flask(__name__)
+app.secret_key = "dev-secret-key"  # 本番は必ず変更
 
-    db.init_app(app)
+DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
 
-    with app.app_context():
-        db.create_all()
 
-    # ---- scheduler: 1時間ごとに通知チェック（発表デモならこれで十分）
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(lambda: run_pressure_alert_check(app), "interval", minutes=60)
-    scheduler.start()
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    # --------------------
-    # helpers
-    # --------------------
-    def current_user():
-        uid = session.get("user_id")
-        if not uid:
-            return None
-        return User.query.get(uid)
 
-    def login_required():
-        if not session.get("user_id"):
-            flash("ログインが必要です。", "warning")
-            return False
-        return True
+def init_db():
+    conn = get_conn()
+    cur = conn.cursor()
 
-    # --------------------
-    # routes
-    # --------------------
-    @app.route("/")
-    def index():
-        return render_template("index.html", user=current_user())
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        pw_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """)
 
-    @app.route("/register", methods=["GET", "POST"])
-    def register():
-        if request.method == "POST":
-            email = request.form.get("email", "").strip().lower()
-            password = request.form.get("password", "")
-            if not email or not password:
-                flash("メールとパスワードを入力してください。", "danger")
-                return redirect(url_for("register"))
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        log_at TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        note TEXT,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+    """)
 
-            if User.query.filter_by(email=email).first():
-                flash("そのメールは既に登録されています。", "warning")
-                return redirect(url_for("register"))
+    conn.commit()
+    conn.close()
 
-            u = User(email=email, threshold_hpa=app.config["PRESSURE_CHANGE_THRESHOLD_HPA"],
-                     lat=app.config["DEFAULT_LAT"], lon=app.config["DEFAULT_LON"])
-            u.set_password(password)
-            db.session.add(u)
-            db.session.commit()
 
-            flash("登録しました。ログインしてください。", "success")
-            return redirect(url_for("login"))
+def current_user_id():
+    return session.get("user_id")
 
-        return render_template("register.html", user=current_user())
 
-    @app.route("/login", methods=["GET", "POST"])
-    def login():
-        if request.method == "POST":
-            email = request.form.get("email", "").strip().lower()
-            password = request.form.get("password", "")
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if not current_user_id():
+        return redirect(url_for("login"))
 
-            u = User.query.filter_by(email=email).first()
-            if not u or not u.check_password(password):
-                flash("メールまたはパスワードが違います。", "danger")
-                return redirect(url_for("login"))
+    if request.method == "POST":
+        score = request.form.get("score", "").strip()
+        note = request.form.get("note", "").strip()
 
-            session["user_id"] = u.id
-            flash("ログインしました。", "success")
-            return redirect(url_for("dashboard"))
+        try:
+            score_int = int(score)
+        except ValueError:
+            flash("体調スコアは整数で入力してください（例：1〜10）")
+            return redirect(url_for("index"))
 
-        return render_template("login.html", user=current_user())
+        if score_int < 1 or score_int > 10:
+            flash("体調スコアは 1〜10 の範囲で入力してください")
+            return redirect(url_for("index"))
 
-    @app.route("/logout")
-    def logout():
-        session.clear()
-        flash("ログアウトしました。", "info")
+        conn = get_conn()
+        conn.execute(
+            "INSERT INTO logs (user_id, log_at, score, note) VALUES (?, ?, ?, ?)",
+            (current_user_id(), datetime.now().isoformat(timespec="seconds"), score_int, note)
+        )
+        conn.commit()
+        conn.close()
+
+        flash("記録しました")
         return redirect(url_for("index"))
 
-    @app.route("/dashboard")
-    def dashboard():
-        if not login_required():
+    conn = get_conn()
+    logs = conn.execute(
+        "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+        (current_user_id(),)
+    ).fetchall()
+    conn.close()
+
+    return render_template("index.html", logs=logs)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # ここは「ログイン専用ページ」表示
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        conn = get_conn()
+        user = conn.execute("SELECT id, pw_hash FROM users WHERE email = ?", (email,)).fetchone()
+        conn.close()
+
+        if not user or not check_password_hash(user["pw_hash"], password):
+            flash("メールまたはパスワードが違います")
             return redirect(url_for("login"))
 
-        u = current_user()
-        series = fetch_pressure_forecast(u.lat, u.lon, app.config["FORECAST_HOURS"])
-        maxdiff = pressure_change_max(series)
+        session["user_id"] = user["id"]
+        flash("ログインしました")
+        return redirect(url_for("index"))
 
-        return render_template(
-            "dashboard.html",
-            user=u,
-            series=series,
-            maxdiff=maxdiff,
-            now=datetime.now(),
-        )
+    return render_template("auth.html", mode="login")
 
-    @app.route("/settings", methods=["GET", "POST"])
-    def settings():
-        if not login_required():
-            return redirect(url_for("login"))
 
-        u = current_user()
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    # ここは「新規登録ページ」表示（テンプレートは同じ auth.html を使う）
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
-        if request.method == "POST":
-            u.notify_enabled = True if request.form.get("notify_enabled") == "on" else False
+        if not email or not password:
+            flash("メールとパスワードは必須です")
+            return redirect(url_for("register"))
 
-            # 数値の安全変換
-            def to_float(val, default):
-                try:
-                    return float(val)
-                except:
-                    return default
+        pw_hash = generate_password_hash(password)
 
-            u.threshold_hpa = to_float(request.form.get("threshold_hpa"), u.threshold_hpa)
-            u.lat = to_float(request.form.get("lat"), u.lat)
-            u.lon = to_float(request.form.get("lon"), u.lon)
+        try:
+            conn = get_conn()
+            conn.execute(
+                "INSERT INTO users (email, pw_hash, created_at) VALUES (?, ?, ?)",
+                (email, pw_hash, datetime.now().isoformat(timespec="seconds"))
+            )
+            conn.commit()
+            conn.close()
+        except sqlite3.IntegrityError:
+            flash("そのメールは既に登録されています")
+            return redirect(url_for("register"))
 
-            db.session.commit()
-            flash("設定を保存しました。", "success")
-            return redirect(url_for("settings"))
+        flash("登録しました。ログインしてください。")
+        return redirect(url_for("login"))
 
-        return render_template("settings.html", user=u)
+    return render_template("auth.html", mode="register")
 
-    @app.route("/symptoms/new", methods=["GET", "POST"])
-    def symptom_new():
-        if not login_required():
-            return redirect(url_for("login"))
-        u = current_user()
+@app.route("/api/pressure")
+def api_pressure():
+    now = datetime.now().replace(minute=0, second=0, microsecond=0)
 
-        if request.method == "POST":
-            symptom = request.form.get("symptom", "").strip()
-            severity = request.form.get("severity", "3").strip()
-            memo = request.form.get("memo", "").strip()
+    labels = []
+    values = []
 
-            if not symptom:
-                flash("症状名を入力してください。", "danger")
-                return redirect(url_for("symptom_new"))
+    v = 1013.0
+    for i in range(48):
+        t = now + timedelta(hours=i)
+        labels.append(t.strftime("%m/%d %H:%M"))
 
-            try:
-                sev = int(severity)
-                if sev < 1 or sev > 5:
-                    raise ValueError()
-            except:
-                flash("重さ(1〜5)を正しく選んでください。", "danger")
-                return redirect(url_for("symptom_new"))
+        v += random.uniform(-0.8, 0.8)
+        values.append(round(v, 1))
 
-            log = SymptomLog(user_id=u.id, symptom=symptom, severity=sev, memo=memo)
-            db.session.add(log)
-            db.session.commit()
+    delta = round(values[-1] - values[0], 1)
 
-            flash("体調を記録しました。", "success")
-            return redirect(url_for("symptom_list"))
+    if abs(delta) >= 8:
+        risk = "警戒"
+    elif abs(delta) >= 4:
+        risk = "注意"
+    else:
+        risk = "安定"
 
-        return render_template("symptom_new.html", user=u)
+    return jsonify({
+        "labels": labels,
+        "values": values,
+        "delta_hpa": delta,
+        "risk": risk
+    })
 
-    @app.route("/symptoms")
-    def symptom_list():
-        if not login_required():
-            return redirect(url_for("login"))
-        u = current_user()
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("ログアウトしました")
+    return redirect(url_for("login"))
 
-        logs = SymptomLog.query.filter_by(user_id=u.id).order_by(SymptomLog.logged_at.desc()).limit(50).all()
-        return render_template("symptom_list.html", user=u, logs=logs)
-
-    # デモ用：ボタンで今すぐ通知チェック（発表でウケるやつ）
-    @app.route("/run-check")
-    def run_check_now():
-        if not login_required():
-            return redirect(url_for("login"))
-        run_pressure_alert_check(app)
-        flash("通知チェックを実行しました（メール設定が無い場合はコンソール出力です）。", "info")
-        return redirect(url_for("dashboard"))
-
-    return app
-
-app = create_app()
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
