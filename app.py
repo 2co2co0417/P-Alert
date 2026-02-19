@@ -157,8 +157,15 @@ def api_pressure():
         v += random.uniform(-0.8, 0.8)
         values.append(round(v, 1))
 
+    # 変化量
     delta = round(values[-1] - values[0], 1)
 
+    # 最も気圧が低い時刻（危険になりやすいタイミング）
+    min_v = min(values)
+    min_i = values.index(min_v)
+    danger_time = labels[min_i]
+
+    # リスク判定
     if abs(delta) >= 8:
         risk = "警戒"
     elif abs(delta) >= 4:
@@ -170,8 +177,11 @@ def api_pressure():
         "labels": labels,
         "values": values,
         "delta_hpa": delta,
-        "risk": risk
+        "risk": risk,
+        "danger_time": danger_time
     })
+
+
 
 @app.route("/logout")
 def logout():
