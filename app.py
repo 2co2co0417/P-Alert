@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
+import random
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"  # 本番は必ず変更
@@ -140,6 +142,36 @@ def register():
 
     return render_template("auth.html", mode="register")
 
+@app.route("/api/pressure")
+def api_pressure():
+    now = datetime.now().replace(minute=0, second=0, microsecond=0)
+
+    labels = []
+    values = []
+
+    v = 1013.0
+    for i in range(48):
+        t = now + timedelta(hours=i)
+        labels.append(t.strftime("%m/%d %H:%M"))
+
+        v += random.uniform(-0.8, 0.8)
+        values.append(round(v, 1))
+
+    delta = round(values[-1] - values[0], 1)
+
+    if abs(delta) >= 8:
+        risk = "警戒"
+    elif abs(delta) >= 4:
+        risk = "注意"
+    else:
+        risk = "安定"
+
+    return jsonify({
+        "labels": labels,
+        "values": values,
+        "delta_hpa": delta,
+        "risk": risk
+    })
 
 @app.route("/logout")
 def logout():
