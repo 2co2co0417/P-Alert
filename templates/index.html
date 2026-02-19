@@ -24,16 +24,34 @@
 <h2>気圧ダッシュボード</h2>
 
 <div style="background:#fff7e6; padding:14px; border-radius:12px; margin-bottom:16px;">
+
+  <!-- 上段：タイトル＋バッジ -->
   <div style="display:flex; justify-content:space-between; align-items:center;">
     <strong>48時間の気圧リスク</strong>
-    <span id="riskBadge" style="padding:6px 12px; border-radius:999px; background:#eee;">
+
+    <span id="riskBadge"
+      style="padding:6px 12px; border-radius:999px; background:#eee;">
       ---
     </span>
   </div>
 
+  <!-- ★ここが追加した説明文 -->
+  <div style="font-size:12px; color:#666; margin-top:6px;">
+    安定：±0〜3hPa　注意：±4〜7hPa　警戒：±8hPa以上
+  </div>
+
+  <!-- 中段：変化量 -->
   <div style="font-size:32px; font-weight:700; margin:12px 0;">
     <span id="deltaText">--</span> hPa
   </div>
+
+  <!-- 下段：グラフ -->
+  <canvas id="pressureChart" height="120" style="width:100%;"></canvas>
+
+</div>
+
+
+  
 
   <canvas id="pressureChart" height="120" style="width:100%;"></canvas>
 
@@ -148,7 +166,10 @@ async function drawPressureChart() {
   const data = await res.json();
 
   // 変化量表示
-  document.getElementById("deltaText").textContent = data.delta_hpa;
+  const d = data.delta_hpa;
+document.getElementById("deltaText").textContent =
+  (d > 0 ? "+" : "") + d;
+
 
   // リスク表示（色）
   const badge = document.getElementById("riskBadge");
