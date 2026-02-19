@@ -3,6 +3,10 @@ import sqlite3
 from datetime import datetime, timedelta
 import os
 import random
+import json
+import urllib.request
+import urllib.parse
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -141,31 +145,38 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("auth.html", mode="register")
+def fetch_pressure(lat, lon):
+    url = (
+        "https://api.open-meteo.com/v1/jma?"
+        f"latitude={lat}&longitude={lon}"
+        "&hourly=surface_pressure"
+        "&timezone=Asia%2FTokyo"
+    )
+
+    with urllib.request.urlopen(url) as response:
+        data = json.loads(response.read())
+
+    times = data["hourly"]["time"]
+    pressures = data["hourly"]["surface_pressure"]
+
+    # 48時間分だけ返す
+    labels = [t[5:16].replace("T", " ") for t in times[:48]]
+    values = [round(p, 1) for p in pressures[:48]]
+
+    return labels, values
 
 @app.route("/api/pressure")
 def api_pressure():
-    now = datetime.now().replace(minute=0, second=0, microsecond=0)
 
-    labels = []
-    values = []
+    # ★ここが本物API（Open-Meteo）
+    labels, values = fetch_pressure(34.07, 132.99)
 
-    v = 1013.0
-    for i in range(48):
-        t = now + timedelta(hours=i)
-        labels.append(t.strftime("%m/%d %H:%M"))
-
-        v += random.uniform(-0.8, 0.8)
-        values.append(round(v, 1))
-
-    # 変化量
     delta = round(values[-1] - values[0], 1)
 
-    # 最も気圧が低い時刻（危険になりやすいタイミング）
     min_v = min(values)
     min_i = values.index(min_v)
     danger_time = labels[min_i]
 
-    # リスク判定
     if abs(delta) >= 8:
         risk = "警戒"
     elif abs(delta) >= 4:
@@ -174,12 +185,14 @@ def api_pressure():
         risk = "安定"
 
     return jsonify({
-        "labels": labels,
-        "values": values,
-        "delta_hpa": delta,
-        "risk": risk,
-        "danger_time": danger_time
-    })
+    "labels": labels,
+    "values": values,
+    "delta_hpa": delta,
+    "risk": risk,
+    "danger_time": danger_time
+})
+
+
 
 
 
