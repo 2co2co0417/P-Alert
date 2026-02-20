@@ -303,6 +303,14 @@ def logout():
     flash("ログアウトしました")
     return redirect(url_for("login"))
 
+import click
+from pressure_job import run_daily_pressure_check
+
+@app.cli.command("daily-pressure-check")
+def daily_pressure_check_cmd():
+    """毎日: 気圧を保存→前日比→閾値超えたらメール通知"""
+    run_daily_pressure_check()
+    click.echo("daily-pressure-check: done")
 
 if __name__ == "__main__":
     init_db()
