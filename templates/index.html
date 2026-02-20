@@ -8,7 +8,7 @@
 <body style="font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px;">
 
   <div style="display:flex; justify-content: space-between; align-items:center;">
-    <h1>P-Alert MVP</h1>
+    <h1 style="margin:0;">P-Alert MVP</h1>
     <a href="/logout">ログアウト</a>
   </div>
 
@@ -21,104 +21,68 @@
       </div>
     {% endif %}
   {% endwith %}
-<h2>気圧ダッシュボード</h2>
 
-<div style="background:#fff7e6; padding:14px; border-radius:12px; margin-bottom:8px;">
+  <h2 style="margin-top:18px;">気圧ダッシュボード</h2>
 
-  <!-- 上段：タイトル＋バッジ -->
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <strong>48時間の気圧リスク</strong>
+  <div style="background:#fff7e6; padding:14px; border-radius:12px; margin-bottom:10px;">
 
-    <span id="riskBadge"
-      style="padding:6px 12px; border-radius:999px; background:#eee;">
-      ---
-    </span>
-  </div>
-
-  <!-- ★ここが追加した説明文 -->
-  <div style="font-size:12px; color:#666; margin-top:6px;">
-    安定：±0〜3hPa　注意：±4〜7hPa　警戒：±8hPa以上
-  </div>
-
-  <!-- 中段：変化量 -->
-  <div style="font-size:32px; font-weight:700; margin:12px 0;">
-    <span id="deltaText">--</span> hPa
-  </div>
-　<div id="dangerText" style="font-size:14px; color:#444; margin-bottom:6px;">
-  　最も危険な時間：--
-　</div>
-
-  <!-- 下段：グラフ -->
-  <canvas id="pressureChart" height="120" style="width:100%;"></canvas>
-
-</div>
-
-
-  
-
-  <canvas id="pressureChart" height="120" style="width:100%;"></canvas>
-
-</div>
-
-  <h2 style="margin-top:20px;">体調記録</h2>
-
-
-  <form method="post" action="/" style="background:#f7fbff; padding:12px; border-radius:10px;">
-    <div style="margin: 8px 0;">
-      <label>体調スコア（1〜10）：</label><br>
-      <input name="score" type="number" min="1" max="10" required style="width:100%; padding:10px;">
+    <!-- ① 48時間の気圧リスク -->
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong>48時間の気圧リスク</strong>
+      <span id="riskBadge" style="padding:6px 12px; border-radius:999px; background:#eee;">
+        ---
+      </span>
     </div>
-    <div style="margin: 8px 0;">
-      <label>メモ（任意）：</label><br>
-      <textarea name="note" rows="3" style="width:100%; padding:10px;"></textarea>
+
+    <div style="font-size:12px; color:#666; margin-top:6px;">
+      安定：±0〜3hPa　注意：±4〜7hPa　警戒：±8hPa以上（※3時間変化で判定）
     </div>
-    <button type="submit" style="padding:10px 16px;">記録する</button>
-  </form>
 
-  <h2 style="margin-top: 18px;">履歴（最新50件）</h2>
-  {% if logs %}
-    <ul>
-      {% for row in logs %}
-        <li style="margin: 10px 0;">
-          <div><strong>{{ row["log_at"] }}</strong></div>
-          <div>スコア：{{ row["score"] }}</div>
-          <div>メモ：{{ row["note"] or "" }}</div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>まだ記録がありません。</p>
-  {% endif %}
+    <!-- ② 要注意（時間帯） -->
+    <div id="dangerText" style="font-size:16px; font-weight:700; color:#333; margin-top:12px;">
+      要注意：--
+    </div>
+    <div style="font-size:12px; color:#666; margin-top:2px;">
+      ※最も下がる3時間帯を表示
+    </div>
 
+    <!-- ③ 現在の気圧 -->
+    <div style="margin-top:14px;">
+      <div style="font-size:12px; color:#666;">現在の気圧</div>
+      <div style="font-size:44px; font-weight:900; line-height:1.1;">
+        <span id="currentText">--</span> hPa
+      </div>
+      <div style="font-size:12px; color:#666; margin-top:4px;">
+        更新：<span id="currentTimeText">--</span>
+      </div>
+    </div>
 
+    <!-- ④ グラフ -->
+    <canvas id="pressureChart" height="160" style="width:100%; margin-top:12px;"></canvas>
+  </div>
+
+  <div style="margin-top:14px;">
+    <a href="/health">▶ 体調記録（ずつうログ）はこちら</a>
+  </div>
 
 <script>
 function drawSimpleLineChart(canvas, labels, values) {
   const ctx = canvas.getContext("2d");
 
-  // 表示サイズを安定させる（CSSで伸び縮みしても崩れにくい）
   const w = canvas.clientWidth || 700;
-  const h = canvas.height || 120;
+  const h = canvas.height || 160;
   canvas.width = w;
   canvas.height = h;
 
-  // 余白
-  const padL = 40;
-  const padR = 10;
-  const padT = 10;
-  const padB = 25;
+  const padL = 40, padR = 10, padT = 10, padB = 25;
 
-  // min/max
   let minV = Math.min(...values);
   let maxV = Math.max(...values);
-  if (minV === maxV) { // 変化が無いときの保険
-    minV -= 1; maxV += 1;
-  }
+  if (minV === maxV) { minV -= 1; maxV += 1; }
 
-  // 背景クリア
   ctx.clearRect(0, 0, w, h);
 
-  // 軸（最低限）
+  // axes
   ctx.strokeStyle = "#cccccc";
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -127,36 +91,27 @@ function drawSimpleLineChart(canvas, labels, values) {
   ctx.lineTo(w - padR, h - padB);
   ctx.stroke();
 
-  // 目盛（上・下）
+  // y labels
   ctx.fillStyle = "#666";
   ctx.font = "12px sans-serif";
   ctx.fillText(`${maxV.toFixed(1)} hPa`, 4, padT + 10);
   ctx.fillText(`${minV.toFixed(1)} hPa`, 4, h - padB);
 
-  // 折れ線
   const n = values.length;
-  const x0 = padL;
-  const y0 = h - padB;
-  const x1 = w - padR;
-  const y1 = padT;
+  const x0 = padL, y0 = h - padB, x1 = w - padR, y1 = padT;
 
-  function x(i) {
-    return x0 + (x1 - x0) * (i / (n - 1));
-  }
-  function y(v) {
-    return y0 - (y0 - y1) * ((v - minV) / (maxV - minV));
-  }
+  function x(i) { return x0 + (x1 - x0) * (i / (n - 1)); }
+  function y(v) { return y0 - (y0 - y1) * ((v - minV) / (maxV - minV)); }
 
-  ctx.strokeStyle = "#2b6cb0"; // 青っぽい線（固定）
+  // line
+  ctx.strokeStyle = "#2b6cb0";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(x(0), y(values[0]));
-  for (let i = 1; i < n; i++) {
-    ctx.lineTo(x(i), y(values[i]));
-  }
+  for (let i = 1; i < n; i++) ctx.lineTo(x(i), y(values[i]));
   ctx.stroke();
 
-  // X軸ラベル：両端だけ
+  // x labels: ends
   ctx.fillStyle = "#666";
   const leftLabel = labels[0] ?? "";
   const rightLabel = labels[n - 1] ?? "";
@@ -165,32 +120,49 @@ function drawSimpleLineChart(canvas, labels, values) {
   ctx.fillText(rightLabel, w - padR - tw, h - 6);
 }
 
+function fmtSigned(num) {
+  if (num == null || Number.isNaN(Number(num))) return "--";
+  const n = Number(num);
+  return (n > 0 ? "+" : "") + n.toFixed(1);
+}
+
 async function drawPressureChart() {
   const res = await fetch("/api/pressure");
   const data = await res.json();
 
-  // 変化量表示
-  const d = data.delta_hpa;
-document.getElementById("deltaText").textContent =
-  (d > 0 ? "+" : "") + d;
-document.getElementById("dangerText").textContent =
-  "最も危険な時間： " + data.danger_time;
+  const values = Array.isArray(data.values) ? data.values : [];
+  const labels = Array.isArray(data.labels) ? data.labels : [];
 
+  // 現在（新: current_hpa/current_time、旧: values末尾/labels末尾）
+  const currentHpa = (data.current_hpa ?? (values.length ? values[values.length - 1] : null));
+  const currentTime = (data.current_time ?? (labels.length ? labels[labels.length - 1] : "--"));
+  document.getElementById("currentText").textContent =
+    (currentHpa != null) ? Number(currentHpa).toFixed(1) : "--";
+  document.getElementById("currentTimeText").textContent = currentTime ?? "--";
 
-  // リスク表示（色）
+  // 要注意（新: danger_window、旧: danger_time）
+  let dangerLine = "要注意：--";
+  if (data.danger_window && data.danger_window.start && data.danger_window.end) {
+    const dh = data.danger_window.delta_hpa;
+    const dhTxt = (dh != null) ? `（${fmtSigned(dh)} hPa）` : "";
+    dangerLine = `要注意：${data.danger_window.start} 〜 ${data.danger_window.end} ${dhTxt}`;
+  } else if (data.danger_time) {
+    dangerLine = `要注意：${data.danger_time}`;
+  }
+  document.getElementById("dangerText").textContent = dangerLine;
+
+  // リスクバッジ
   const badge = document.getElementById("riskBadge");
-  badge.textContent = data.risk;
-
+  badge.textContent = data.risk ?? "---";
   if (data.risk === "警戒") badge.style.background = "#ffcccc";
   else if (data.risk === "注意") badge.style.background = "#ffe5b4";
   else badge.style.background = "#d9fdd3";
 
-  // グラフ描画（Chart.js不要）
+  // グラフ
   const canvas = document.getElementById("pressureChart");
-  drawSimpleLineChart(canvas, data.labels, data.values);
+  if (labels.length && values.length) drawSimpleLineChart(canvas, labels, values);
 }
 
-// 画面表示後に描く
 window.addEventListener("load", drawPressureChart);
 </script>
 
