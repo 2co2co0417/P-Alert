@@ -21,7 +21,6 @@ login_manager.login_view = "auth.login"
 app.register_blueprint(auth_bp)
 app.register_blueprint(pressure_bp)
 
-
 DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
 print("APP DB PATH:", DB_PATH)
 

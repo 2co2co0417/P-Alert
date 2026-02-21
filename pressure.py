@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify
+from flask import Blueprint, render_template, redirect, url_for, jsonify
 from datetime import datetime
+from flask_login import login_required, current_user
 import json
 import urllib.request
 
@@ -7,19 +8,11 @@ pressure_bp = Blueprint("pressure", __name__)
 
 
 # ----------------------------
-# ログインチェック用
-# ----------------------------
-def current_user_id():
-    return session.get("user_id")
-
-
-# ----------------------------
 # ダッシュボード画面
 # ----------------------------
+@login_required
 @pressure_bp.route("/")
 def index():
-    if not current_user_id():
-        return redirect(url_for("auth.login"))
     return render_template("index.html")
 
 
@@ -72,11 +65,9 @@ def _find_now_index(labels):
 # ----------------------------
 # API
 # ----------------------------
+@login_required
 @pressure_bp.route("/api/pressure")
 def api_pressure():
-
-    if not current_user_id():
-        return jsonify({"error": "unauthorized"}), 401
 
     labels, values = fetch_pressure(34.07, 132.99)
 
