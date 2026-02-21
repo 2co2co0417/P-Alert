@@ -2,19 +2,28 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 from datetime import datetime
 import os
-
+from flask_login import LoginManager
+from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from user import User
 from auth import auth_bp
 from pressure import pressure_bp
 
 
 app = Flask(__name__)
-app.register_blueprint(auth_bp)
-app.register_blueprint(pressure_bp)
 app.secret_key = "dev-secret-key"  # 本番は必ず変更
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
+#LoginManager 初期化
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "auth.login"
 
+app.register_blueprint(auth_bp)
+app.register_blueprint(pressure_bp)
+
+
+DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
+print("APP DB PATH:", DB_PATH)
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
@@ -52,6 +61,20 @@ def init_db():
 
 def current_user_id():
     return session.get("user_id")
+
+#ユーザー組み込み関数
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_conn()
+    user = conn.execute(
+        "SELECT id FROM users WHERE id = ?",
+        (user_id,)
+    ).fetchone()
+    conn.close()
+
+    if user:
+        return User(user["id"])
+    return None
 
 @app.route("/health", methods=["GET", "POST"])
 def health():
@@ -96,4 +119,4 @@ def health():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

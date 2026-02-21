@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 import sqlite3
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, logout_user
+from user import User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -35,7 +37,7 @@ def login():
             flash("メールまたはパスワードが違います")
             return redirect(url_for("auth.login"))
 
-        session["user_id"] = user["id"]
+        login_user(User(user["id"]))
         flash("ログインしました")
         return redirect(url_for("pressure.index"))
 
@@ -80,6 +82,6 @@ def register():
 # =============================
 @auth_bp.route("/logout")
 def logout():
-    session.clear()
+    logout_user()
     flash("ログアウトしました")
     return redirect(url_for("auth.login"))
