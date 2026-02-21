@@ -9,6 +9,10 @@ import urllib.parse
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# .env を読み込むために追加
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"  # 本番は必ず変更
@@ -312,6 +316,21 @@ def daily_pressure_check_cmd():
     run_daily_pressure_check()
     click.echo("daily-pressure-check: done")
 
+import click
+
+@app.cli.command("test-email")
+@click.option("--to", "to_addr", default=lambda: os.getenv("MAIL_TEST_TO", ""))
+def test_email(to_addr):
+    if not to_addr:
+        raise click.ClickException("送信先が空です。.env を確認してください。")
+
+    send_email(
+        to_addr=to_addr,
+        subject="P-Alert SMTP テスト",
+        body="これはP-AlertからのSMTP疎通テストです。届けば成功です。"
+    )
+    click.echo(f"OK: sent to {to_addr}")
+    
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
