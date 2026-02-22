@@ -538,5 +538,9 @@ def night_forecast_alert_cmd():
 # Main
 # =========================
 if __name__ == "__main__":
-    init_db()
+    send_email(
+        "gclgcl0024@gmail.com",
+        "【テスト】P-Alert通知",
+        "これはP-Alertのテストメールです。"
+    )
     app.run(debug=True)
