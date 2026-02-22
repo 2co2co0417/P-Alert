@@ -8,10 +8,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from user import User
 from auth import auth_bp
 from pressure import pressure_bp
+import json
+import urllib.request
+import smtplib
+from email.mime.text import MIMEText
+import click
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
+# =========================
+# App / Config
+# =========================
 app = Flask(__name__)
-app.secret_key = "dev-secret-key"  # 本番は必ず変更
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 
 #LoginManager 初期化
 login_manager = LoginManager()
@@ -21,14 +30,24 @@ login_manager.login_view = "auth.login"
 app.register_blueprint(auth_bp)
 app.register_blueprint(pressure_bp)
 
+# DB設定
 DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
 print("APP DB PATH:", DB_PATH)
 
+# 気圧取得用設定（メール機能）
+LAT = float(os.getenv("LAT", "34.07"))
+LON = float(os.getenv("LON", "132.99"))
+TIMEZONE = "Asia%2FTokyo"
+
+# =========================
+# DB helpers
+# =========================
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
     return conn
-
 
 def init_db():
     conn = get_conn()
@@ -54,9 +73,35 @@ def init_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS pressure_daily (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        pressure_hpa REAL,
+        p_min REAL,
+        p_max REAL,
+        p_range REAL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(user_id, date),
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS alerts_sent (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(user_id, date, kind),
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+    """)
+
     conn.commit()
     conn.close()
-
 
 def current_user_id():
     return session.get("user_id")
@@ -80,7 +125,7 @@ def health():
     if not current_user_id():
         return redirect(url_for("auth.login"))
 
-    # POST（登録）
+
     if request.method == "POST":
         score = request.form.get("score", "").strip()
         note = request.form.get("note", "").strip()
@@ -106,7 +151,6 @@ def health():
         flash("記録しました")
         return redirect(url_for("health"))
 
-    # GET（表示）
     conn = get_conn()
     logs = conn.execute(
         "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
@@ -116,6 +160,8 @@ def health():
 
     return render_template("health.html", logs=logs)
 
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, use_reloader=False)
+

@@ -15,7 +15,6 @@ pressure_bp = Blueprint("pressure", __name__)
 def index():
     return render_template("index.html")
 
-
 # ----------------------------
 # 気圧取得
 # ----------------------------
@@ -23,17 +22,17 @@ def fetch_pressure(lat, lon):
     url = (
         "https://api.open-meteo.com/v1/jma?"
         f"latitude={lat}&longitude={lon}"
-        "&hourly=surface_pressure"
+        "&hourly=pressure_msl"
         "&timezone=Asia%2FTokyo"
     )
 
     with urllib.request.urlopen(url) as response:
-        data = json.loads(response.read())
+        data = json.loads(response.read().decode())
 
     times = data["hourly"]["time"]
-    pressures = data["hourly"]["surface_pressure"]
+    pressures = data["hourly"]["pressure_msl"]
 
-    labels = [t[5:16].replace("T", " ") for t in times[:48]]
+    labels = [t.replace("T", " ")[:16] for t in times[:48]]
     values = [round(p, 1) for p in pressures[:48]]
 
     return labels, values
