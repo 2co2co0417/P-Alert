@@ -10,6 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from user import User
 from auth import auth_bp
 from pressure import pressure_bp
+from settei import settei_bp
 import json
 import urllib.request
 import smtplib
@@ -31,6 +32,7 @@ login_manager.login_view = "auth.login"
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(pressure_bp)
+app.register_blueprint(settei_bp)
 
 # DB設定
 DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
