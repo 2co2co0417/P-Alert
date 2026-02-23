@@ -534,6 +534,44 @@ def night_forecast_alert_cmd():
     conn.commit()
     conn.close()
     print("night-forecast-alert: done")
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/login")
+
+    if request.method == "POST":
+        base_threshold = float(request.form.get("base_threshold", "4.0"))
+
+        drink_choice = request.form.get("drink_choice", "none")
+        drink_map = {
+            "none": 0.0,
+            "shochu": 0.5,
+            "beer_whisky": 1.0,
+            "wine": 1.5,
+        }
+        drink_offset = drink_map.get(drink_choice, 0.0)
+
+        pollen_enabled = 1 if request.form.get("pollen_enabled") == "on" else 0
+        pollen_offset = 0.5 if pollen_enabled else 0.0
+
+        db = get_db()
+        db.execute("""
+            UPDATE user_settings
+               SET base_threshold = ?,
+                   drink_offset = ?,
+                   pollen_enabled = ?,
+                   pollen_offset = ?,
+                   updated_at = datetime('now')
+             WHERE user_id = ?
+        """, (base_threshold, drink_offset, pollen_enabled, pollen_offset, user_id))
+        db.commit()
+        db.close()
+
+        return redirect("/settings")
+
+    s = get_user_settings(user_id)
+    return render_template("settings.html", s=s)
 # =========================
 # Main
 # =========================
