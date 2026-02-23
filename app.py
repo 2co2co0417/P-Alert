@@ -159,7 +159,6 @@ def health():
 
     return render_template("health.html", logs=logs)
 
-<<<<<<< HEAD
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -448,8 +447,6 @@ def settings():
 # =========================
 # Main
 # =========================
-=======
->>>>>>> MVP-Nasu
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, use_reloader=False)
