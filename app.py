@@ -4,6 +4,8 @@ from datetime import datetime
 import os
 from flask_login import LoginManager
 from flask_login import UserMixin
+from flask_login import login_required
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from user import User
 from auth import auth_bp
@@ -103,9 +105,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-def current_user_id():
-    return session.get("user_id")
-
 #ユーザー組み込み関数
 @login_manager.user_loader
 def load_user(user_id):
@@ -121,10 +120,8 @@ def load_user(user_id):
     return None
 
 @app.route("/health", methods=["GET", "POST"])
+@login_required
 def health():
-    if not current_user_id():
-        return redirect(url_for("auth.login"))
-
 
     if request.method == "POST":
         score = request.form.get("score", "").strip()
@@ -143,7 +140,7 @@ def health():
         conn = get_conn()
         conn.execute(
             "INSERT INTO logs (user_id, log_at, score, note) VALUES (?, ?, ?, ?)",
-            (current_user_id(), datetime.now().isoformat(timespec="seconds"), score_int, note)
+            (current_user.id, datetime.now().isoformat(timespec="seconds"), score_int, note)
         )
         conn.commit()
         conn.close()
@@ -154,12 +151,11 @@ def health():
     conn = get_conn()
     logs = conn.execute(
         "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
-        (current_user_id(),)
+        (current_user.id,)
     ).fetchall()
     conn.close()
 
     return render_template("health.html", logs=logs)
-
 
 if __name__ == "__main__":
     init_db()
