@@ -1,58 +1,8 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>P-Alert MVP - 体調記録</title>
+{% extends "base.html" %}
+{% block title %}体調記録{% endblock %}
 
+{% block extra_css %}
 <style>
-body {
-  font-family: sans-serif;
-  max-width: 720px;
-  margin: 24px auto;
-  padding: 0 16px;
-  background: linear-gradient(to bottom, #eef2ff, #f8fafc);
-}
-
-h1, h2 {
-  margin-bottom: 16px;
-}
-
-/* ===== ヘッダー ===== */
-.topbar {
-  display:flex;
-  justify-content: space-between;
-  align-items:center;
-  margin-bottom: 20px;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.nav-btn {
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: #3b82f6;
-  color: white !important;
-  font-size: 14px;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.logout-btn {
-  background: #ef4444;
-}
-
-/* ===== カード ===== */
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 18px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  margin-bottom: 20px;
-}
 
 /* ===== スコア表示 ===== */
 .score-display {
@@ -93,30 +43,15 @@ input[type="range"]::-webkit-slider-thumb {
   margin-top: 6px;
 }
 
-/* ===== フォーム ===== */
+/* ===== メモ欄 ===== */
 textarea {
   width: 100%;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 12px;
   border: 1px solid #ddd;
   font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
-  margin-top: 16px;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
+  min-height: 110px;
+  resize: vertical;
 }
 
 /* ===== 履歴横並び ===== */
@@ -130,14 +65,8 @@ button:hover {
   display: flex;
   gap: 12px;
   font-size: 15px;
-}
-
-.history-date {
-  font-weight: 600;
-}
-
-.history-time {
-  color: #666;
+  font-weight: 600;   /* ← 日付と時間を同じ太さに */
+  color: #333;        /* ← 同じ色に */
 }
 
 .score-badge {
@@ -147,37 +76,10 @@ button:hover {
   color: white;
 }
 
-/* ===== フラッシュ ===== */
-.flash {
-  background:#fff7e6;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:16px;
-}
 </style>
-</head>
+{% endblock %}
 
-<body>
-
-<!-- ===== ヘッダー ===== -->
-<div class="topbar">
-  <h1 style="margin:0;">P-Alert MVP</h1>
-  <div class="nav-buttons">
-    <a href="/" class="nav-btn">気圧へ</a>
-    <a href="/logout" class="nav-btn logout-btn">ログアウト</a>
-  </div>
-</div>
-
-<!-- ===== フラッシュ ===== -->
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="flash">
-      {% for msg in messages %}
-        <div>• {{ msg }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
+{% block content %}
 
 <h2>体調記録 ~ずつうログ~</h2>
 
@@ -218,12 +120,8 @@ button:hover {
     <div class="card history-row">
 
       <div class="history-left">
-        <span class="history-date">
-          {{ row["log_at"][:10] }}
-        </span>
-        <span class="history-time">
-          {{ row["log_at"][11:16] }}
-        </span>
+        <span>{{ row["log_at"][:10] }}</span>
+        <span>{{ row["log_at"][11:16] }}</span>
       </div>
 
       <div>
@@ -242,6 +140,9 @@ button:hover {
   <div class="card">まだ記録がありません。</div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 function updateScore(val) {
 
@@ -266,6 +167,4 @@ function updateScore(val) {
 
 updateScore(3);
 </script>
-
-</body>
-</html>
+{% endblock %}
