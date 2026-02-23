@@ -42,6 +42,7 @@
   <form method="POST" action="{{ url_for('settei.settei_home') }}"
         style="display:grid; gap:18px;">
 
+    <!-- 基本アラート -->
     <div>
       <label><b>基本アラート値（hPa）</b></label><br>
       <input type="number"
@@ -51,6 +52,7 @@
              style="padding:10px; border-radius:8px; border:1px solid #ccc;">
     </div>
 
+    <!-- 飲酒補正 -->
     <div>
       <label><b>飲酒補正</b></label><br>
       {% set d = s.drink_offset %}
@@ -72,15 +74,26 @@
         <option value="wine" {% if d == 1.5 %}selected{% endif %}>
           ワイン（1.5）
         </option>
+
       </select>
     </div>
 
+    <!-- 花粉補正（トグルスイッチ版） -->
     <div>
-      <label style="display:flex; align-items:center; gap:8px;">
-        <input type="checkbox"
-               name="pollen_enabled"
-               {% if s.pollen_enabled == 1 %}checked{% endif %}>
-        花粉注意報を考慮する（0.5）
+      <div style="font-weight:600; margin-bottom:8px;">
+        花粉補正
+      </div>
+
+      <label class="toggle-row">
+        <span>花粉注意報を考慮する（0.5）</span>
+
+        <div class="toggle-switch">
+          <input type="checkbox"
+                 name="pollen_enabled"
+                 id="pollenToggle"
+                 {% if s.pollen_enabled == 1 %}checked{% endif %}>
+          <span class="slider"></span>
+        </div>
       </label>
     </div>
 

@@ -225,3 +225,123 @@ button:active,
   height: 100% !important;
   display: block;
 }
+/* =====================================================
+   設定画面：花粉補正レイアウト修正版
+===================================================== */
+
+.pollen-option {
+  display: flex;
+  align-items: flex-start;     /* 中央揃えをやめて自然配置 */
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.pollen-option input[type="checkbox"] {
+  margin-top: 3px;             /* テキストと縦位置微調整 */
+  transform: scale(1.15);      /* 少しだけ大きく */
+  cursor: pointer;
+}
+
+/* チェックボックス横のテキスト */
+.pollen-option span {
+  display: inline-block;
+}
+
+/* モバイル時の崩れ防止 */
+@media (max-width: 480px) {
+  .pollen-option {
+    font-size: 14px;
+  }
+}
+/* =====================================================
+   設定画面：トグルスイッチ（花粉補正用）
+   ※ 他ページに影響しない専用設計
+===================================================== */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 15px;
+  width: 100%;
+}
+
+.toggle-row span {
+  flex: 1;
+}
+
+/* ===== スイッチ本体 ===== */
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* ===== 背景バー ===== */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+}
+
+/* ===== 丸いボタン ===== */
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  top: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ===== ON状態 ===== */
+.toggle-switch input:checked + .slider {
+  background-color: #3b82f6; /* healthテーマブルー */
+}
+
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* ===== フォーカス時 ===== */
+.toggle-switch input:focus + .slider {
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+}
+
+/* ===== モバイル最適化 ===== */
+@media (max-width: 480px) {
+  .toggle-row {
+    font-size: 14px;
+  }
+
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+  }
+
+  .slider:before {
+    height: 18px;
+    width: 18px;
+  }
+
+  .toggle-switch input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+}
