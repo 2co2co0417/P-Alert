@@ -1,16 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
+from flask_login import LoginManager
+from flask_login import UserMixin
+from flask_login import login_required
+
+from werkzeug.security import generate_password_hash, check_password_hash
+from user import User
+from auth import auth_bp
+from pressure import pressure_bp
+from settei import settei_bp
 import json
 import urllib.request
 import smtplib
 from email.mime.text import MIMEText
 import click
 from werkzeug.security import generate_password_hash, check_password_hash
-from dotenv import load_dotenv
 
-load_dotenv()
 
 # =========================
 # App / Config
@@ -18,9 +25,20 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
+#LoginManager 初期化
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "auth.login"
 
-# 今治（必要なら変更）
+app.register_blueprint(auth_bp)
+app.register_blueprint(pressure_bp)
+app.register_blueprint(settei_bp)
+
+# DB設定
+DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
+print("APP DB PATH:", DB_PATH)
+
+# 気圧取得用設定（メール機能）
 LAT = float(os.getenv("LAT", "34.07"))
 LON = float(os.getenv("LON", "132.99"))
 TIMEZONE = "Asia%2FTokyo"
@@ -89,169 +107,23 @@ def init_db():
     conn.commit()
     conn.close()
 
-def current_user_id():
-    return session.get("user_id")
+#ユーザー組み込み関数
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_conn()
+    user = conn.execute(
+        "SELECT id FROM users WHERE id = ?",
+        (user_id,)
+    ).fetchone()
+    conn.close()
 
-def login_required():
-    if not current_user_id():
-        return False
-    return True
-
-# =========================
-# Pressure (MSLP)
-# =========================
-def fetch_pressure_48h_msl():
-    url = (
-        "https://api.open-meteo.com/v1/jma?"
-        f"latitude={LAT}&longitude={LON}"
-        "&hourly=pressure_msl"
-        f"&timezone={TIMEZONE}"
-    )
-    with urllib.request.urlopen(url) as res:
-        data = json.loads(res.read().decode())
-
-    times = data["hourly"]["time"]
-    pressures = data["hourly"]["pressure_msl"]
-
-    labels = [t.replace("T", " ")[:16] for t in times[:48]]
-    values = [round(float(p), 1) for p in pressures[:48]]
-    return labels, values
-
-def fetch_today_pressures_msl():
-    today = datetime.now().strftime("%Y-%m-%d")
-    url = (
-        "https://api.open-meteo.com/v1/jma?"
-        f"latitude={LAT}&longitude={LON}"
-        "&hourly=pressure_msl"
-        f"&timezone={TIMEZONE}"
-    )
-    with urllib.request.urlopen(url) as res:
-        data = json.loads(res.read().decode())
-
-    times = data["hourly"]["time"]
-    pressures = data["hourly"]["pressure_msl"]
-
-    vals = [float(p) for t, p in zip(times, pressures) if str(t).startswith(today)]
-    if len(vals) < 6:
-        vals = [float(p) for p in pressures[:24]]
-    return vals
-
-# =========================
-# Routes
-# =========================
-@app.route("/")
-def index():
-    if not login_required():
-        return redirect(url_for("login"))
-    return render_template("index.html")
-
-@app.route("/api/pressure")
-def api_pressure():
-    if not current_user_id():
-        return jsonify({"error": "unauthorized"}), 401
-
-    labels, values = fetch_pressure_48h_msl()
-    n = len(values)
-    if n == 0:
-        return jsonify({"error": "no data"}), 500
-
-    # 「現在」は最後ではなく、今に近い点を探す（安全策）
-    def _parse_label_to_dt(lb: str) -> datetime:
-        s = lb.strip().replace("T", " ")
-        if len(s) >= 16:
-            s = s[:16]
-        return datetime.strptime(s, "%Y-%m-%d %H:%M")
-
-    now = datetime.now()
-    best_i = 0
-    best_diff = None
-    for i, lb in enumerate(labels):
-        try:
-            dt = _parse_label_to_dt(lb)
-        except Exception:
-            continue
-        diff = abs((dt - now).total_seconds())
-        if best_diff is None or diff < best_diff:
-            best_diff = diff
-            best_i = i
-    i_now = best_i
-
-    current_hpa = round(values[i_now], 1)
-    current_time = labels[i_now]
-
-    # 3時間前比
-    delta_3h = None
-    base_time_3h = None
-    if i_now >= 3:
-        delta_3h = round(values[i_now] - values[i_now - 3], 1)
-        base_time_3h = labels[i_now - 3]
-
-    # トレンド（直近3時間）
-    trend = "不明"
-    if delta_3h is not None:
-        if delta_3h <= -6:
-            trend = "急降下"
-        elif delta_3h <= -3:
-            trend = "やや注意"
-        elif delta_3h < 3:
-            trend = "安定"
-        else:
-            trend = "上昇"
-
-    # 最も下がる3時間帯（これを「要注意」に表示）
-    danger = None
-    if n >= 4:
-        best_i = None
-        best_drop = 0.0
-        for i in range(0, n - 3):
-            drop = values[i + 3] - values[i]  # 3時間での変化（マイナスが危険）
-            if best_i is None or drop < best_drop:
-                best_i = i
-                best_drop = drop
-        danger = {
-            "start": labels[best_i],
-            "end": labels[best_i + 3],
-            "delta_hpa": round(best_drop, 1)
-        }
-
-    # リスク判定（3時間低下量ベース）
-    risk = "不明"
-    if danger is not None:
-        drop3 = abs(danger["delta_hpa"])
-        if drop3 >= 8:
-            risk = "警戒"
-        elif drop3 >= 4:
-            risk = "注意"
-        else:
-            risk = "安定"
-
-    # 互換（古いUIが delta_hpa/danger_time を使う場合）
-    delta_hpa_legacy = delta_3h if delta_3h is not None else 0.0
-    danger_time_legacy = danger["start"] if danger else current_time
-
-    return jsonify({
-        "labels": labels,
-        "values": values,
-
-        "current_hpa": current_hpa,
-        "current_time": current_time,
-
-        "delta_3h": delta_3h,
-        "delta_3h_base_time": base_time_3h,
-        "trend": trend,
-
-        "danger_window": danger,
-        "risk": risk,
-
-        # 旧互換（index.html がこれを見てる可能性が高い）
-        "delta_hpa": delta_hpa_legacy,
-        "danger_time": danger_time_legacy,
-    })
+    if user:
+        return User(user["id"])
+    return None
 
 @app.route("/health", methods=["GET", "POST"])
+@login_required
 def health():
-    if not login_required():
-        return redirect(url_for("login"))
 
     if request.method == "POST":
         score = request.form.get("score", "").strip()
@@ -270,7 +142,7 @@ def health():
         conn = get_conn()
         conn.execute(
             "INSERT INTO logs (user_id, log_at, score, note) VALUES (?, ?, ?, ?)",
-            (current_user_id(), datetime.now().isoformat(timespec="seconds"), score_int, note)
+            (current_user.id, datetime.now().isoformat(timespec="seconds"), score_int, note)
         )
         conn.commit()
         conn.close()
@@ -281,12 +153,13 @@ def health():
     conn = get_conn()
     logs = conn.execute(
         "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
-        (current_user_id(),)
+        (current_user.id,)
     ).fetchall()
     conn.close()
 
     return render_template("health.html", logs=logs)
 
+<<<<<<< HEAD
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -575,6 +448,9 @@ def settings():
 # =========================
 # Main
 # =========================
+=======
+>>>>>>> MVP-Nasu
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
+
