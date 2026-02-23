@@ -4,57 +4,67 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>P-Alert MVP - 認証</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body style="font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px;">
+<body>
 
-  <h1>P-Alert MVP</h1>
+  <div class="card">
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div style="background:#f5f5f5; padding:12px; border-radius:8px; margin: 12px 0;">
-        {% for msg in messages %}
-          <div>• {{ msg }}</div>
-        {% endfor %}
+    <!-- ブランド -->
+    <div class="brand">
+      <div class="brand-title">
+        <span class="icon">⛅</span>
+        <span>P-Alert</span>
       </div>
+      <div class="brand-sub">やさしく体調を見守ります</div>
+    </div>
+
+    <!-- フラッシュメッセージ -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for msg in messages %}
+            <div>• {{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if mode == "register" %}
+
+      <h2 class="page-title">新規登録</h2>
+      <form method="post" action="/register">
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+        <button type="submit" class="btn-primary">登録</button>
+      </form>
+      <p class="switch-link">すでにアカウントをお持ちですか？ → <a href="/login">ログイン</a></p>
+
+    {% else %}
+
+      <h2 class="page-title">ログイン</h2>
+      <form method="post" action="/login">
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+        <button type="submit" class="btn-primary">ログイン</button>
+      </form>
+      <p class="switch-link">はじめて？ → <a href="/register">新規登録</a></p>
+
     {% endif %}
-  {% endwith %}
 
-  {% if mode == "register" %}
-    <h2>新規登録</h2>
-    <form method="post" action="/register">
-      <div style="margin: 8px 0;">
-        <label>メール：</label><br>
-        <input name="email" type="email" required style="width:100%; padding:10px;">
-      </div>
-      <div style="margin: 8px 0;">
-        <label>パスワード：</label><br>
-        <input name="password" type="password" required style="width:100%; padding:10px;">
-      </div>
-      <button type="submit" style="padding:10px 16px;">登録</button>
-    </form>
-
-    <p style="margin-top:12px;">
-      <a href="/login">ログインへ</a>
-    </p>
-
-  {% else %}
-    <h2>ログイン</h2>
-    <form method="post" action="/login">
-      <div style="margin: 8px 0;">
-        <label>メール：</label><br>
-        <input name="email" type="email" required style="width:100%; padding:10px;">
-      </div>
-      <div style="margin: 8px 0;">
-        <label>パスワード：</label><br>
-        <input name="password" type="password" required style="width:100%; padding:10px;">
-      </div>
-      <button type="submit" style="padding:10px 16px;">ログイン</button>
-    </form>
-
-    <p style="margin-top:12px;">
-      <a href="/register">新規登録へ</a>
-    </p>
-  {% endif %}
+  </div>
 
 </body>
 </html>
