@@ -1,186 +1,73 @@
-/* =============================
-   リセット
-============================= */
+/* =====================================================
+   RESET
+===================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* =============================
-   ベース
-============================= */
+/* =====================================================
+   BASE
+===================================================== */
 body {
-  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #e0f0ff 0%, #c8e4ff 50%, #d6eeff 100%);
+  font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background: linear-gradient(135deg,#e0f0ff 0%,#c8e4ff 50%,#d6eeff 100%);
   padding: 24px 16px;
+
+
+  /* 🔥 フレックス完全削除 */
+  display: block;
 }
 
-/* =============================
+body.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* =====================================================
+   コンテンツ中央配置用ラッパ
+===================================================== */
+.page-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* =====================================================
    カード
-============================= */
-.card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 40px 36px 36px;
+===================================================== */
+
+.auth-card {
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 8px 32px rgba(80, 140, 220, 0.12);
+  max-width: 420px;
+  background: #ffffff;
+  padding: 40px 36px;
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
 }
 
-/* =============================
-   ブランド
-============================= */
-.brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 28px;
-}
-
-.brand-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 22px;
-  font-weight: 700;
-  color: #222;
-}
-
-.brand-title .icon {
-  font-size: 26px;
-}
-
-.brand-sub {
-  font-size: 13px;
-  color: #888;
-}
-
-/* =============================
-   ページタイトル
-============================= */
-.page-title {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-  color: #222;
-  margin-bottom: 24px;
-}
-
-/* =============================
-   フラッシュメッセージ
-============================= */
-.flash {
-  background: #fff3f3;
-  border: 1px solid #ffcdd2;
-  color: #c62828;
-  padding: 12px 14px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-.flash div {
-  margin-bottom: 2px;
-}
-
-.flash div:last-child {
-  margin-bottom: 0;
-}
-
-/* =============================
-   フォーム
-============================= */
-.field {
-  margin-bottom: 18px;
-}
-
-.field label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
-}
-
-.field input {
+.dashboard-card-modern {
   width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
-  color: #222;
-  outline: none;
-  transition: border-color 0.2s;
-  background: #fafafa;
+  max-width: 420px;
+  margin: 20px auto 0;
+
+  background: #f4f4f4;
+  padding: 16px !important;
+  border-radius: 22px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+
+  /* 安定 */
+  box-sizing: border-box;
 }
 
-.field input:focus {
-  border-color: #5aabff;
-  background: #fff;
-}
-
-/* =============================
-   ボタン
-============================= */
-.btn-primary {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(90deg, #5ab4ff 0%, #4a9ff5 100%);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: opacity 0.2s, transform 0.1s;
-  letter-spacing: 0.04em;
-}
-
-.btn-primary:hover {
-  opacity: 0.92;
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-/* =============================
-   切り替えリンク
-============================= */
-.switch-link {
-  text-align: center;
-  margin-top: 18px;
-  font-size: 14px;
-  color: #777;
-}
-
-.switch-link a {
-  color: #e05b5b;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.switch-link a:hover {
-  text-decoration: underline;
-}
-
-
-/* =============================
-   モダンダッシュボードUI
-============================= */
-
-/* 上部中央ヘッダー */
+/* =====================================================
+   トップ
+===================================================== */
 .top-center {
   text-align: center;
-  margin-top: 10px;
   margin-bottom: 20px;
 }
 
@@ -195,7 +82,57 @@ body {
   margin-top: 14px;
 }
 
-/* リスクピル */
+/* ============================= */
+/* auth ヘッダー（カード外） */
+/* ============================= */
+
+.auth-header {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.auth-sub-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #444;
+  margin-top: 6px;
+}
+
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* ============================= */
+/* auth カード */
+/* ============================= */
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+
+  background: #ffffff;
+  padding: 32px 24px; 
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+/* ============================= */
+/* auth 入力フォーム改善 */
+/* ============================= */
+
+input {
+   box-sizing: border-box;
+}
+
+
+/* =====================================================
+   リスク
+===================================================== */
 .risk-pill {
   display: inline-block;
   margin-top: 14px;
@@ -206,16 +143,9 @@ body {
   background: #d9fdd3;
 }
 
-/* グレーカード */
-.dashboard-card-modern {
-  background: #f4f4f4;
-  padding: 26px;
-  border-radius: 22px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  margin-top: 20px;
-}
-
-/* 現在の気圧中央 */
+/* =====================================================
+   現在値
+===================================================== */
 .current-center {
   text-align: center;
   margin-bottom: 16px;
@@ -236,22 +166,27 @@ body {
   font-size: 12px;
   color: #888;
   margin-top: 6px;
-}  
+}
 
-/* CTAボタン */
+/* =====================================================
+   CTAボタン
+===================================================== */
 .cta-button {
   display: block;
   width: 100%;
-  max-width: 420px;     /* ← これ追加 */
-  margin: 26px auto 0;  /* ← 中央寄せ */
+  max-width: 420px;
+  margin: 26px auto 0;
   padding: 18px;
+
   border-radius: 999px;
   text-align: center;
   font-weight: 700;
   font-size: 16px;
-  background: linear-gradient(90deg, #f48fb1, #ec407a);
+
+  background: linear-gradient(90deg,#f48fb1,#ec407a);
   color: white;
   text-decoration: none;
+
   box-shadow: 0 6px 18px rgba(236,64,122,0.4);
   transition: transform 0.1s ease;
 }
@@ -260,7 +195,18 @@ body {
   transform: scale(0.97);
 }
 
-body.page-dashboard {
-  flex-direction: column;
-  align-items: center;
+.chart-wrapper {
+  width: 100%;
+  max-width: 420px;
+  height: 200px;      /* ← 高さを固定 */
+  margin: 0 auto;
+}
+
+/* =====================================================
+   Chart
+===================================================== */
+#pressureChart {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }

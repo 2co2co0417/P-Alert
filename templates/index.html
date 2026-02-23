@@ -4,156 +4,64 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>P-Alert MVP</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body class="page-dashboard">
+<body>
 
+<div class="page-container">
+
+  <!-- ========================= -->
+  <!-- トップ -->
+  <!-- ========================= -->
   <div class="top-center">
     <div class="app-title">⛅ P-Alert</div>
     <div class="sub-title">今日の気圧</div>
     <div id="riskBadge" class="risk-pill">---</div>
   </div>
 
+  <!-- ========================= -->
+  <!-- カード -->
+  <!-- ========================= -->
   <div class="dashboard-card-modern">
 
     <div class="current-center">
       <div class="label">現在の気圧</div>
+
       <div class="big-value">
         <span id="currentText">--</span> hPa
       </div>
+
       <div class="update-time">
         更新：<span id="currentTimeText">--</span>
       </div>
     </div>
 
-    <div id="dangerText" class="danger-text" style="margin-top:8px;"></div>
-
-    <canvas id="pressureChart"
-      style="width:100%; height:160px; margin-top:16px;">
-    </canvas>
+    <div id="dangerText"
+         class="danger-text"
+         style="margin-top:8px;">
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="pressureChart"></canvas>
+    </div>
 
   </div>
+
+  <!-- ========================= -->
+  <!-- ボタン -->
+  <!-- ========================= -->
   <a href="/health" class="cta-button">
-      ✍️ 体調を記録する
+    ✍️ 体調を記録する
   </a>
 
+</div>
 
-<script>
-function drawSimpleLineChart(canvas, labels, values) {
-  const ctx = canvas.getContext("2d");
 
-  const w = canvas.clientWidth || 700;
-  const h = 160;
-
-  canvas.width = w;
-  canvas.height = h;
-
-  const padL = 40, padR = 10, padT = 10, padB = 25;
-
-  let minV = Math.min(...values);
-  let maxV = Math.max(...values);
-  if (minV === maxV) { minV -= 1; maxV += 1; }
-
-  ctx.clearRect(0, 0, w, h);
-
-  // axes
-  ctx.strokeStyle = "#cccccc";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padL, padT);
-  ctx.lineTo(padL, h - padB);
-  ctx.lineTo(w - padR, h - padB);
-  ctx.stroke();
-
-  // y labels
-  ctx.fillStyle = "#666";
-  ctx.font = "12px sans-serif";
-  ctx.fillText(`${maxV.toFixed(1)} hPa`, 4, padT + 10);
-  ctx.fillText(`${minV.toFixed(1)} hPa`, 4, h - padB);
-
-  const n = values.length;
-  const x0 = padL, y0 = h - padB, x1 = w - padR, y1 = padT;
-
-  function x(i) { return x0 + (x1 - x0) * (i / (n - 1)); }
-  function y(v) { return y0 - (y0 - y1) * ((v - minV) / (maxV - minV)); }
-
-  // line
-  ctx.strokeStyle = "#2b6cb0";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x(0), y(values[0]));
-  for (let i = 1; i < n; i++) {
-    ctx.lineTo(x(i), y(values[i]));
-  }
-  ctx.stroke();
-
-  // x labels
-  ctx.fillStyle = "#666";
-  const leftLabel = labels[0] ?? "";
-  const rightLabel = labels[n - 1] ?? "";
-  ctx.fillText(leftLabel, padL, h - 6);
-  const tw = ctx.measureText(rightLabel).width;
-  ctx.fillText(rightLabel, w - padR - tw, h - 6);
-}
-
-function fmtSigned(num) {
-  if (num == null || Number.isNaN(Number(num))) return "--";
-  const n = Number(num);
-  return (n > 0 ? "+" : "") + n.toFixed(1);
-}
-
-async function drawPressureChart() {
-  try {
-    const res = await fetch("/api/pressure");
-    const data = await res.json();
-
-    const values = Array.isArray(data.values) ? data.values : [];
-    const labels = Array.isArray(data.labels) ? data.labels : [];
-
-    const currentHpa = (data.current_hpa ?? (values.length ? values[values.length - 1] : null));
-    const currentTime = (data.current_time ?? (labels.length ? labels[labels.length - 1] : "--"));
-
-    document.getElementById("currentText").textContent =
-      (currentHpa != null) ? Number(currentHpa).toFixed(1) : "--";
-
-    document.getElementById("currentTimeText").textContent =
-      currentTime ?? "--";
-
-    let dangerLine = "要注意：--";
-    if (data.danger_window && data.danger_window.start && data.danger_window.end) {
-      const dh = data.danger_window.delta_hpa;
-      const dhTxt = (dh != null) ? `（${fmtSigned(dh)} hPa）` : "";
-      dangerLine = `要注意：${data.danger_window.start} 〜 ${data.danger_window.end} ${dhTxt}`;
-    } else if (data.danger_time) {
-      dangerLine = `要注意：${data.danger_time}`;
-    }
-
-    document.getElementById("dangerText").textContent = dangerLine;
-
-    const badge = document.getElementById("riskBadge");
-    badge.textContent = data.risk ?? "---";
-
-    if (data.risk === "警戒") {
-      badge.style.background = "#ffcdd2";
-    } else if (data.risk === "注意") {
-      badge.style.background = "#ffe5b4";
-    } else {
-      badge.style.background = "#c8e6c9";
-    }
-
-    const canvas = document.getElementById("pressureChart");
-    if (labels.length > 1 && values.length > 1) {
-      drawSimpleLineChart(canvas, labels, values);
-    }
-
-  } catch (err) {
-    console.error("グラフ描画エラー:", err);
-  }
-}
-
-window.addEventListener("load", drawPressureChart);
-</script>
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/pressure.js') }}"></script>
 
 </body>
 </html>

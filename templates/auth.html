@@ -3,68 +3,123 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>P-Alert MVP - 認証</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>P-Alert</title>
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
 
-  <div class="card">
+<body class="auth-page">
 
-    <!-- ブランド -->
-    <div class="brand">
-      <div class="brand-title">
-        <span class="icon">⛅</span>
-        <span>P-Alert</span>
-      </div>
-      <div class="brand-sub">やさしく体調を見守ります</div>
+<div class="auth-container">
+
+  <!-- ================= -->
+  <!-- タイトル -->
+  <!-- ================= -->
+
+  <div class="auth-header">
+    <div class="app-title">
+      ⛅ P-Alert
     </div>
 
-    <!-- フラッシュメッセージ -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash">
-          {% for msg in messages %}
-            <div>• {{ msg }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
     {% if mode == "register" %}
-
-      <h2 class="page-title">新規登録</h2>
-      <form method="post" action="/register">
-        <div class="field">
-          <label>メール</label>
-          <input name="email" type="email" required>
-        </div>
-        <div class="field">
-          <label>パスワード</label>
-          <input name="password" type="password" required>
-        </div>
-        <button type="submit" class="btn-primary">登録</button>
-      </form>
-      <p class="switch-link">すでにアカウントをお持ちですか？ → <a href="/login">ログイン</a></p>
-
+      <div class="auth-sub-title">新規登録</div>
     {% else %}
+      <div class="auth-sub-title">ログイン</div>
+    {% endif %}
+  </div>
 
-      <h2 class="page-title">ログイン</h2>
-      <form method="post" action="/login">
+
+  <!-- =============================== -->
+  <!-- フラッシュ -->
+  <!-- =============================== -->
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">
+        {% for msg in messages %}
+          <div>• {{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+
+  <!-- ================================================== -->
+  <!-- REGISTER -->
+  <!-- ================================================== -->
+
+  {% if mode == "register" %}
+
+    <div class="dashboard-card-modern">
+
+      <form method="post" action="/register">
+
         <div class="field">
           <label>メール</label>
           <input name="email" type="email" required>
         </div>
+
         <div class="field">
           <label>パスワード</label>
           <input name="password" type="password" required>
         </div>
-        <button type="submit" class="btn-primary">ログイン</button>
+
+        <button type="submit" class="btn-primary">
+          アカウント作成
+        </button>
+
       </form>
-      <p class="switch-link">はじめて？ → <a href="/register">新規登録</a></p>
 
-    {% endif %}
+    </div>
 
-  </div>
+    <p class="switch-link" style="text-align:center; margin-top:16px;">
+      すでにアカウントありますか？
+      <a href="/login">ログイン</a>
+    </p>
+
+
+  <!-- ================================================== -->
+  <!-- LOGIN -->
+  <!-- ================================================== -->
+
+  {% else %}
+
+    <form method="post" action="/login">
+
+      <!-- 🔵 入力だけカード -->
+      <div class="dashboard-card-modern">
+
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+
+      </div>
+
+      <!-- 🔥 ボタンはカード外 -->
+      <div style="text-align:center; margin-top:16px;">
+        <button type="submit" class="cta-button">
+          ログイン
+        </button>
+      </div>
+
+    </form>
+
+    <!-- 🔥 リンクもカード外 -->
+    <p class="switch-link" style="text-align:center; margin-top:20px;">
+      はじめてですか？
+      <a href="/register">新規登録</a>
+    </p>
+
+  {% endif %}
+
+</div>
 
 </body>
 </html>
