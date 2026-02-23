@@ -1,0 +1,212 @@
+/* =====================================================
+   RESET
+===================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =====================================================
+   BASE
+===================================================== */
+body {
+  font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background: linear-gradient(135deg,#e0f0ff 0%,#c8e4ff 50%,#d6eeff 100%);
+  padding: 24px 16px;
+
+
+  /* 🔥 フレックス完全削除 */
+  display: block;
+}
+
+body.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* =====================================================
+   コンテンツ中央配置用ラッパ
+===================================================== */
+.page-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* =====================================================
+   カード
+===================================================== */
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 40px 36px;
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+.dashboard-card-modern {
+  width: 100%;
+  max-width: 420px;
+  margin: 20px auto 0;
+
+  background: #f4f4f4;
+  padding: 16px !important;
+  border-radius: 22px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+
+  /* 安定 */
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   トップ
+===================================================== */
+.top-center {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.sub-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 14px;
+}
+
+/* ============================= */
+/* auth ヘッダー（カード外） */
+/* ============================= */
+
+.auth-header {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.auth-sub-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #444;
+  margin-top: 6px;
+}
+
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* ============================= */
+/* auth カード */
+/* ============================= */
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+
+  background: #ffffff;
+  padding: 32px 24px; 
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+/* ============================= */
+/* auth 入力フォーム改善 */
+/* ============================= */
+
+input {
+   box-sizing: border-box;
+}
+
+
+/* =====================================================
+   リスク
+===================================================== */
+.risk-pill {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  background: #d9fdd3;
+}
+
+/* =====================================================
+   現在値
+===================================================== */
+.current-center {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.current-center .label {
+  font-size: 14px;
+  color: #777;
+}
+
+.current-center .big-value {
+  font-size: 48px;
+  font-weight: 900;
+  margin-top: 8px;
+}
+
+.current-center .update-time {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}
+
+/* =====================================================
+   CTAボタン
+===================================================== */
+.cta-button {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 26px auto 0;
+  padding: 18px;
+
+  border-radius: 999px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+
+  background: linear-gradient(90deg,#f48fb1,#ec407a);
+  color: white;
+  text-decoration: none;
+
+  box-shadow: 0 6px 18px rgba(236,64,122,0.4);
+  transition: transform 0.1s ease;
+}
+
+.cta-button:active {
+  transform: scale(0.97);
+}
+
+.chart-wrapper {
+  width: 100%;
+  max-width: 420px;
+  height: 200px;      /* ← 高さを固定 */
+  margin: 0 auto;
+}
+
+/* =====================================================
+   Chart
+===================================================== */
+#pressureChart {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}

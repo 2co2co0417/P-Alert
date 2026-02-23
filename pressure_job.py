@@ -1,4 +1,3 @@
-# pressure_job.py
 import os
 import sqlite3
 from datetime import datetime, timedelta, date
@@ -151,3 +150,6 @@ def run_daily_pressure_check():
                 mark_sent(cur, user_id, today_s, kind)
 
         con.commit()
+    
+if __name__ == "__main__":
+    run_daily_pressure_check()

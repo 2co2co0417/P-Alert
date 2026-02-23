@@ -3,15 +3,40 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>P-Alert MVP - 認証</title>
-</head>
-<body style="font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px;">
+  <title>P-Alert</title>
 
-  <h1>P-Alert MVP</h1>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="auth-page">
+
+<div class="auth-container">
+
+  <!-- ================= -->
+  <!-- タイトル -->
+  <!-- ================= -->
+
+  <div class="auth-header">
+    <div class="app-title">
+      ⛅ P-Alert
+    </div>
+
+    {% if mode == "register" %}
+      <div class="auth-sub-title">新規登録</div>
+    {% else %}
+      <div class="auth-sub-title">ログイン</div>
+    {% endif %}
+  </div>
+
+
+  <!-- =============================== -->
+  <!-- フラッシュ -->
+  <!-- =============================== -->
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
-      <div style="background:#f5f5f5; padding:12px; border-radius:8px; margin: 12px 0;">
+      <div class="flash">
         {% for msg in messages %}
           <div>• {{ msg }}</div>
         {% endfor %}
@@ -19,42 +44,82 @@
     {% endif %}
   {% endwith %}
 
-  {% if mode == "register" %}
-    <h2>新規登録</h2>
-    <form method="post" action="/register">
-      <div style="margin: 8px 0;">
-        <label>メール：</label><br>
-        <input name="email" type="email" required style="width:100%; padding:10px;">
-      </div>
-      <div style="margin: 8px 0;">
-        <label>パスワード：</label><br>
-        <input name="password" type="password" required style="width:100%; padding:10px;">
-      </div>
-      <button type="submit" style="padding:10px 16px;">登録</button>
-    </form>
 
-    <p style="margin-top:12px;">
-      <a href="/login">ログインへ</a>
+  <!-- ================================================== -->
+  <!-- REGISTER -->
+  <!-- ================================================== -->
+
+  {% if mode == "register" %}
+
+    <div class="dashboard-card-modern">
+
+      <form method="post" action="/register">
+
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          アカウント作成
+        </button>
+
+      </form>
+
+    </div>
+
+    <p class="switch-link" style="text-align:center; margin-top:16px;">
+      すでにアカウントありますか？
+      <a href="/login">ログイン</a>
     </p>
+
+
+  <!-- ================================================== -->
+  <!-- LOGIN -->
+  <!-- ================================================== -->
 
   {% else %}
-    <h2>ログイン</h2>
+
     <form method="post" action="/login">
-      <div style="margin: 8px 0;">
-        <label>メール：</label><br>
-        <input name="email" type="email" required style="width:100%; padding:10px;">
+
+      <!-- 🔵 入力だけカード -->
+      <div class="dashboard-card-modern">
+
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+
       </div>
-      <div style="margin: 8px 0;">
-        <label>パスワード：</label><br>
-        <input name="password" type="password" required style="width:100%; padding:10px;">
+
+      <!-- 🔥 ボタンはカード外 -->
+      <div style="text-align:center; margin-top:16px;">
+        <button type="submit" class="cta-button">
+          ログイン
+        </button>
       </div>
-      <button type="submit" style="padding:10px 16px;">ログイン</button>
+
     </form>
 
-    <p style="margin-top:12px;">
-      <a href="/register">新規登録へ</a>
+    <!-- 🔥 リンクもカード外 -->
+    <p class="switch-link" style="text-align:center; margin-top:20px;">
+      はじめてですか？
+      <a href="/register">新規登録</a>
     </p>
+
   {% endif %}
+
+</div>
 
 </body>
 </html>
