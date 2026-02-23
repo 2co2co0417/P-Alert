@@ -79,8 +79,8 @@ def health():
             flash("体調スコアは整数で入力してください（例：1〜10）")
             return redirect(url_for("health"))
 
-        if score_int < 1 or score_int > 10:
-            flash("体調スコアは 1〜10 の範囲で入力してください")
+        if score_int < 1 or score_int > 5:
+            flash("体調スコアは 1〜5 の範囲で入力してください")
             return redirect(url_for("health"))
 
         conn = get_conn()

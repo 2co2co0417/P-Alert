@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS "condition_logs" (
 	"id"	INTEGER,
 	"user_id"	INTEGER NOT NULL,
 	"record_date"	TEXT NOT NULL,
-	"condition_score"	INTEGER NOT NULL CHECK("condition_score" IN (1, 2, 3)),
+	"condition_score"	INTEGER NOT NULL CHECK("condition_score" BETWEEN 1 AND 5),
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
 );
