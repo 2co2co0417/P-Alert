@@ -1,18 +1,11 @@
 import sqlite3
-from flask import Blueprint, render_template, request, redirect, session, flash
+from flask import Blueprint, render_template, request, redirect, session
 from flask_login import login_required, current_user
 from flask import url_for
 settei_bp = Blueprint("settei", __name__, url_prefix="/settei")
 
 DB_PATH = "mvp.db"  # あなたのDB名に合わせる
 
-def calc_effective_threshold(s):
-    base_t = float(s["base_threshold"])
-    drink = float(s["drink_offset"])
-    pollen = float(s["pollen_offset"]) if int(s["pollen_enabled"]) == 1 else 0.0
-    effective = base_t - drink - pollen
-    # 下限（暴発防止）※好みで0.0でもOK
-    return max(effective, 0.5)
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -73,7 +66,7 @@ def settei_home():
         effective = base - drink_adjust - pollen_adjust
 
     # いったん保存せず、表示だけ確認
-        flash(f"保存内容（確認）: 実効しきい値 = {effective:.1f} hPa", "info")
+        
         return redirect(url_for("settei.settei_home"))
 
     s = get_user_settings(user_id)
@@ -89,6 +82,4 @@ def test_alert():
     s = get_user_settings(user_id)
     effective = calc_effective_threshold(s)
 
-    # いまは「テストしたよ」だけ（安全）
-    flash(f"✅ テストアラート（模擬）: 現在の実効しきい値は {effective:.1f} hPa です。")
     return redirect("/settei/")
