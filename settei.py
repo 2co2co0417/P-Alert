@@ -52,29 +52,29 @@ def get_user_settings(user_id):
 def settei_home():
     user_id = int(current_user.id)
 
-if request.method == "POST":
-    print("===== SETTEI POST HIT =====")
-    print("FORM:", dict(request.form))
-    print("===========================")
+    if request.method == "POST":
+        print("===== SETTEI POST HIT =====")
+        print("FORM:", dict(request.form))
+        print("===========================")
 
-    base = float(request.form.get("base_threshold", 4.0))
-    drink_choice = request.form.get("drink_choice", "none")
-    pollen_on = True if request.form.get("pollen_enabled") else False
+        base = float(request.form.get("base_threshold", 4.0))
+        drink_choice = request.form.get("drink_choice", "none")
+        pollen_on = True if request.form.get("pollen_enabled") else False
 
-    drink_map = {
-        "none": 0.0,
-        "beer_whisky": 0.5,
-        "wine": 1.0,
-        "shochu": 0.5,
-    }
-    drink_adjust = drink_map.get(drink_choice, 0.0)
-    pollen_adjust = 0.5 if pollen_on else 0.0
+        drink_map = {
+            "none": 0.0,
+            "beer_whisky": 0.5,
+            "wine": 1.0,
+            "shochu": 0.5,
+        }
+        drink_adjust = drink_map.get(drink_choice, 0.0)
+        pollen_adjust = 0.5 if pollen_on else 0.0
 
-    effective = base - drink_adjust - pollen_adjust
+        effective = base - drink_adjust - pollen_adjust
 
     # いったん保存せず、表示だけ確認
-    flash(f"受信OK: base={base}, drink={drink_adjust}, pollen={pollen_adjust} → effective={effective}")
-    return redirect(url_for("settei.settei_home"))
+        flash(f"保存内容（確認）: 実効しきい値 = {effective:.1f} hPa", "info")
+        return redirect(url_for("settei.settei_home"))
 
     s = get_user_settings(user_id)
     effective = calc_effective_threshold(s)
