@@ -53,6 +53,9 @@ def settei_home():
     user_id = int(current_user.id)
 
     if request.method == "POST":
+    print("===== SETTEI POST HIT =====")
+    print("FORM:", dict(request.form))
+    print("===========================")
         ...
         return redirect(url_for("settei.settei_home"))  # ←Blueprint名が違うなら後述
 
