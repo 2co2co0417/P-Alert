@@ -2,22 +2,19 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 from datetime import datetime
 import os
-from flask_login import LoginManager
-from flask_login import UserMixin
-from flask_login import login_required
-
-from werkzeug.security import generate_password_hash, check_password_hash
-from user import User
-from auth import auth_bp
-from pressure import pressure_bp
-from settei import settei_bp
 import json
 import urllib.request
 import smtplib
 from email.mime.text import MIMEText
 import click
+
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from user import User
+from auth import auth_bp
+from pressure import pressure_bp
+from settei import settei_bp
 
 # =========================
 # App / Config
@@ -135,8 +132,8 @@ def health():
             flash("体調スコアは整数で入力してください（例：1〜10）")
             return redirect(url_for("health"))
 
-        if score_int < 1 or score_int > 10:
-            flash("体調スコアは 1〜10 の範囲で入力してください")
+        if score_int < 1 or score_int > 5:
+            flash("体調スコアは 1〜5 の範囲で入力してください")
             return redirect(url_for("health"))
 
         conn = get_conn()
