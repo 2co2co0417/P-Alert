@@ -1,5 +1,6 @@
 import sqlite3
 from flask import Blueprint, render_template, request, redirect, session, flash
+from flask_login import login_required, current_user
 
 settei_bp = Blueprint("settei", __name__, url_prefix="/settei")
 
@@ -47,8 +48,9 @@ def get_user_settings(user_id):
     return row
 
 @settei_bp.route("/", methods=["GET", "POST"])
+@login_required
 def settei_home():
-    user_id = session.get("user_id")
+    user_id = current_user.id
     if not user_id:
         return redirect("/login")
 
@@ -60,8 +62,9 @@ def settei_home():
     effective = calc_effective_threshold(s)
     return render_template("settei.html", s=s, effective=effective)
 @settei_bp.route("/test-alert", methods=["POST"])
+@login_required
 def test_alert():
-    user_id = session.get("user_id")
+    user_id = current_user.id
     if not user_id:
         return redirect("/login")
 
