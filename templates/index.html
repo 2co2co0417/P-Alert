@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}P-Alert MVP{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+  <!-- ========================= -->
+  <!-- トップ -->
+  <!-- ========================= -->
+  <div class="top-center">
+    <div class="app-title">⛅ P-Alert</div>
+    <div class="sub-title">今日の気圧</div>
+    <div id="riskBadge" class="risk-pill">---</div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- カード -->
+  <!-- ========================= -->
+  <div class="dashboard-card-modern">
+
+    <div class="current-center">
+      <div class="label">現在の気圧</div>
+
+      <div class="big-value">
+        <span id="currentText">--</span> hPa
+      </div>
+
+      <div class="update-time">
+        更新：<span id="currentTimeText">--</span>
+      </div>
+    </div>
+
+    <div id="dangerText"
+         class="danger-text"
+         style="margin-top:8px;">
+    </div>
+
+    <div class="chart-wrapper">
+      <canvas id="pressureChart"></canvas>
+    </div>
+
+  </div>
+
+  <!-- ========================= -->
+  <!-- ボタン -->
+  <!-- ========================= -->
+  <a href="/health" class="cta-button">
+    ✍️ 体調を記録する
+  </a>
+
+  <a href="/settei" class="cta-button">
+    設定画面
+  </a>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/pressure.js') }}"></script>
+{% endblock %}

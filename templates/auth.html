@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P-Alert</title>
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="auth-page">
+
+<div class="auth-container">
+
+  <!-- ================= -->
+  <!-- タイトル -->
+  <!-- ================= -->
+
+  <div class="auth-header">
+    <div class="app-title">
+      ⛅ P-Alert
+    </div>
+
+    {% if mode == "register" %}
+      <div class="auth-sub-title">新規登録</div>
+    {% else %}
+      <div class="auth-sub-title">ログイン</div>
+    {% endif %}
+  </div>
+
+
+  <!-- =============================== -->
+  <!-- フラッシュ -->
+  <!-- =============================== -->
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">
+        {% for msg in messages %}
+          <div>• {{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+
+  <!-- ================================================== -->
+  <!-- REGISTER -->
+  <!-- ================================================== -->
+
+  {% if mode == "register" %}
+
+    <div class="dashboard-card-modern">
+
+      <form method="post" action="/register">
+
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          アカウント作成
+        </button>
+
+      </form>
+
+    </div>
+
+    <p class="switch-link" style="text-align:center; margin-top:16px;">
+      すでにアカウントありますか？
+      <a href="/login">ログイン</a>
+    </p>
+
+
+  <!-- ================================================== -->
+  <!-- LOGIN -->
+  <!-- ================================================== -->
+
+  {% else %}
+
+    <form method="post" action="/login">
+
+      <!-- 🔵 入力だけカード -->
+      <div class="dashboard-card-modern">
+
+        <div class="field">
+          <label>メール</label>
+          <input name="email" type="email" required>
+        </div>
+
+        <div class="field">
+          <label>パスワード</label>
+          <input name="password" type="password" required>
+        </div>
+
+      </div>
+
+      <!-- 🔥 ボタンはカード外 -->
+      <div style="text-align:center; margin-top:16px;">
+        <button type="submit" class="cta-button">
+          ログイン
+        </button>
+      </div>
+
+    </form>
+
+    <!-- 🔥 リンクもカード外 -->
+    <p class="switch-link" style="text-align:center; margin-top:20px;">
+      はじめてですか？
+      <a href="/register">新規登録</a>
+    </p>
+
+  {% endif %}
+
+</div>
+
+</body>
+</html>

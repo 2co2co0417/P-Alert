@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}体調記録{% endblock %}
+
+{% block extra_css %}
+<style>
+
+/* ===== スコア表示 ===== */
+.score-display {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 16px;
+  transition: 0.3s;
+  color: white;
+}
+
+/* ===== スライダー ===== */
+input[type="range"] {
+  width: 100%;
+  appearance: none;
+  height: 8px;
+  border-radius: 10px;
+  outline: none;
+  background: linear-gradient(to right, #60a5fa, #fbbf24, #ef4444);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #3b82f6;
+  cursor: pointer;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* ===== メモ欄 ===== */
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  min-height: 110px;
+  resize: vertical;
+}
+
+/* ===== 履歴横並び ===== */
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-left {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;   /* ← 日付と時間を同じ太さに */
+  color: #333;        /* ← 同じ色に */
+}
+
+.score-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>体調記録 ~ずつうログ~</h2>
+
+<div class="card">
+<form method="post" action="/health">
+
+  <div class="score-display" id="scoreLabel">中</div>
+
+  <input type="range"
+         name="score"
+         min="1"
+         max="5"
+         step="1"
+         value="3"
+         oninput="updateScore(this.value)">
+
+  <div class="range-labels">
+    <span>弱</span>
+    <span></span>
+    <span>中</span>
+    <span></span>
+    <span>強</span>
+  </div>
+
+  <div style="margin-top:18px;">
+    <textarea name="note" rows="3" placeholder="メモ（任意）"></textarea>
+  </div>
+
+  <button type="submit">記録する</button>
+
+</form>
+</div>
+
+<h2>履歴（最新50件）</h2>
+
+{% if logs %}
+  {% for row in logs %}
+    <div class="card history-row">
+
+      <div class="history-left">
+        <span>{{ row["log_at"][:10] }}</span>
+        <span>{{ row["log_at"][11:16] }}</span>
+      </div>
+
+      <div>
+        {% if row["score"] <= 2 %}
+          <span class="score-badge" style="background:#60a5fa;">弱</span>
+        {% elif row["score"] == 3 %}
+          <span class="score-badge" style="background:#fbbf24;">中</span>
+        {% else %}
+          <span class="score-badge" style="background:#ef4444;">強</span>
+        {% endif %}
+      </div>
+
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">まだ記録がありません。</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateScore(val) {
+
+  let labelText = "";
+  let color = "";
+
+  if (val <= 2) {
+    labelText = "弱";
+    color = "#60a5fa";
+  } else if (val == 3) {
+    labelText = "中";
+    color = "#fbbf24";
+  } else {
+    labelText = "強";
+    color = "#ef4444";
+  }
+
+  const label = document.getElementById("scoreLabel");
+  label.innerText = labelText;
+  label.style.background = color;
+}
+
+updateScore(3);
+</script>
+{% endblock %}
