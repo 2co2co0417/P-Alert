@@ -10,8 +10,8 @@ pressure_bp = Blueprint("pressure", __name__)
 # ----------------------------
 # ダッシュボード画面
 # ----------------------------
-@login_required
 @pressure_bp.route("/")
+@login_required
 def index():
     return render_template("index.html")
 

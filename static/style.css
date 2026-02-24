@@ -1,201 +1,180 @@
-/* =============================
-   リセット
-============================= */
+/* =====================================================
+   RESET
+===================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* =============================
-   ベース
-============================= */
+/* =====================================================
+   BASE
+===================================================== */
 body {
-  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #e0f0ff 0%, #c8e4ff 50%, #d6eeff 100%);
+  font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background: linear-gradient(135deg,#e0f0ff 0%,#c8e4ff 50%,#d6eeff 100%);
   padding: 24px 16px;
+  display: block;
 }
 
-/* =============================
-   カード
-============================= */
-.card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 40px 36px 36px;
+body.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* =====================================================
+   共通ラッパ
+===================================================== */
+.page-wrapper {
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 8px 32px rgba(80, 140, 220, 0.12);
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* =============================
-   ブランド
-============================= */
-.brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 28px;
-}
-
-.brand-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 22px;
-  font-weight: 700;
-  color: #222;
-}
-
-.brand-title .icon {
-  font-size: 26px;
-}
-
-.brand-sub {
-  font-size: 13px;
-  color: #888;
-}
-
-/* =============================
-   ページタイトル
-============================= */
-.page-title {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-  color: #222;
+/* =====================================================
+   カード共通（health基準）
+===================================================== */
+.card,
+.dashboard-card-modern,
+.auth-card {
+  width: 100%;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   margin-bottom: 24px;
 }
 
-/* =============================
-   フラッシュメッセージ
-============================= */
-.flash {
-  background: #fff3f3;
-  border: 1px solid #ffcdd2;
-  color: #c62828;
-  padding: 12px 14px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  font-size: 14px;
+.dashboard-card-modern {
+  max-width: 420px;
+  margin: 20px auto 0;
 }
 
-.flash div {
-  margin-bottom: 2px;
-}
-
-.flash div:last-child {
-  margin-bottom: 0;
-}
-
-/* =============================
-   フォーム
-============================= */
-.field {
-  margin-bottom: 18px;
-}
-
-.field label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
-}
-
-.field input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
-  color: #222;
-  outline: none;
-  transition: border-color 0.2s;
-  background: #fafafa;
-}
-
-.field input:focus {
-  border-color: #5aabff;
-  background: #fff;
-}
-
-/* =============================
-   ボタン
-============================= */
-.btn-primary {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(90deg, #5ab4ff 0%, #4a9ff5 100%);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: opacity 0.2s, transform 0.1s;
-  letter-spacing: 0.04em;
-}
-
-.btn-primary:hover {
-  opacity: 0.92;
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-/* =============================
-   切り替えリンク
-============================= */
-.switch-link {
-  text-align: center;
-  margin-top: 18px;
-  font-size: 14px;
-  color: #777;
-}
-
-.switch-link a {
-  color: #e05b5b;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.switch-link a:hover {
-  text-decoration: underline;
-}
-
-
-/* =============================
-   モダンダッシュボードUI
-============================= */
-
-/* 上部中央ヘッダー */
-.top-center {
-  text-align: center;
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
+/* =====================================================
+   タイトル系
+===================================================== */
 .app-title {
   font-size: 28px;
   font-weight: 800;
 }
 
-.sub-title {
-  font-size: 20px;
+.sub-title,
+.auth-sub-title {
+  font-size: 18px;
   font-weight: 700;
-  margin-top: 14px;
+  color: #444;
+  margin-top: 6px;
 }
 
-/* リスクピル */
+.auth-header {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* =====================================================
+   入力フォーム
+===================================================== */
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* =====================================================
+   CTAボタン（ページ内大ボタン）
+===================================================== */
+button,
+.cta-button,
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+
+  background: #3b82f6;
+  color: white;
+  text-decoration: none;
+  border: none;
+
+  box-shadow: 0 6px 18px rgba(59,130,246,0.3);
+  transition: transform 0.1s ease, opacity 0.2s ease;
+  cursor: pointer;
+
+  margin-top: 18px;
+}
+
+button:hover,
+.cta-button:hover {
+  opacity: 0.9;
+}
+
+button:active,
+.cta-button:active {
+  transform: scale(0.97);
+}
+
+/* =====================================================
+   ナビボタン（上部メニュー専用）
+===================================================== */
+.nav-btn {
+  display: inline-block;
+  width: auto;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+
+  background: #3b82f6;
+  color: white;
+  text-decoration: none;
+
+  box-shadow: 0 6px 18px rgba(59,130,246,0.3);
+  margin-left: 8px;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+.nav-btn:hover {
+  opacity: 0.9;
+}
+
+.nav-btn.active {
+  transform: scale(1.08);
+}
+
+/* =====================================================
+   リスク表示
+===================================================== */
 .risk-pill {
   display: inline-block;
   margin-top: 14px;
@@ -206,16 +185,9 @@ body {
   background: #d9fdd3;
 }
 
-/* グレーカード */
-.dashboard-card-modern {
-  background: #f4f4f4;
-  padding: 26px;
-  border-radius: 22px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  margin-top: 20px;
-}
-
-/* 現在の気圧中央 */
+/* =====================================================
+   現在値表示
+===================================================== */
 .current-center {
   text-align: center;
   margin-bottom: 16px;
@@ -236,31 +208,140 @@ body {
   font-size: 12px;
   color: #888;
   margin-top: 6px;
-}  
+}
 
-/* CTAボタン */
-.cta-button {
-  display: block;
+/* =====================================================
+   Chart
+===================================================== */
+.chart-wrapper {
   width: 100%;
-  max-width: 420px;     /* ← これ追加 */
-  margin: 26px auto 0;  /* ← 中央寄せ */
-  padding: 18px;
-  border-radius: 999px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 16px;
-  background: linear-gradient(90deg, #f48fb1, #ec407a);
-  color: white;
-  text-decoration: none;
-  box-shadow: 0 6px 18px rgba(236,64,122,0.4);
-  transition: transform 0.1s ease;
+  max-width: 420px;
+  height: 200px;
+  margin: 0 auto;
 }
 
-.cta-button:active {
-  transform: scale(0.97);
+#pressureChart {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+/* =====================================================
+   設定画面：花粉補正レイアウト修正版
+===================================================== */
+
+.pollen-option {
+  display: flex;
+  align-items: flex-start;     /* 中央揃えをやめて自然配置 */
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.4;
 }
 
-body.page-dashboard {
-  flex-direction: column;
+.pollen-option input[type="checkbox"] {
+  margin-top: 3px;             /* テキストと縦位置微調整 */
+  transform: scale(1.15);      /* 少しだけ大きく */
+  cursor: pointer;
+}
+
+/* チェックボックス横のテキスト */
+.pollen-option span {
+  display: inline-block;
+}
+
+/* モバイル時の崩れ防止 */
+@media (max-width: 480px) {
+  .pollen-option {
+    font-size: 14px;
+  }
+}
+/* =====================================================
+   設定画面：トグルスイッチ（花粉補正用）
+   ※ 他ページに影響しない専用設計
+===================================================== */
+
+.toggle-row {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 15px;
+  width: 100%;
+}
+
+.toggle-row span {
+  flex: 1;
+}
+
+/* ===== スイッチ本体 ===== */
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* ===== 背景バー ===== */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+}
+
+/* ===== 丸いボタン ===== */
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  top: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ===== ON状態 ===== */
+.toggle-switch input:checked + .slider {
+  background-color: #3b82f6; /* healthテーマブルー */
+}
+
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* ===== フォーカス時 ===== */
+.toggle-switch input:focus + .slider {
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+}
+
+/* ===== モバイル最適化 ===== */
+@media (max-width: 480px) {
+  .toggle-row {
+    font-size: 14px;
+  }
+
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+  }
+
+  .slider:before {
+    height: 18px;
+    width: 18px;
+  }
+
+  .toggle-switch input:checked + .slider:before {
+    transform: translateX(20px);
+  }
 }
