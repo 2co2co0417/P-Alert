@@ -14,6 +14,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from user import User
 from auth import auth_bp
 from pressure import pressure_bp
+from pressure import get_pressure_delta
 from settei import settei_bp
 
 # =========================
@@ -137,10 +138,17 @@ def health():
             return redirect(url_for("health"))
 
         conn = get_conn()
+        delta = get_pressure_delta()
         conn.execute(
-            "INSERT INTO logs (user_id, log_at, score, note) VALUES (?, ?, ?, ?)",
-            (current_user.id, datetime.now().isoformat(timespec="seconds"), score_int, note)
-        )
+            "INSERT INTO logs (user_id, log_at, score, note, pressure_delta) VALUES (?, ?, ?, ?, ?)",
+    (
+            current_user.id,
+            datetime.now().isoformat(timespec="seconds"),
+            score_int,
+            note,
+            delta
+    )
+)
         conn.commit()
         conn.close()
 
