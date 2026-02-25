@@ -60,7 +60,26 @@ def _find_now_index(labels):
 
     return best_i
 
-
+def _calc_danger_window(labels, values):
+    """
+    48時間の series から「最悪3時間の下げ幅」を計算して返す。
+    api_pressure() の danger_window と同じ定義。
+    """
+    danger = None
+    if len(values) >= 4:
+        best_i = 0
+        best_drop = 0
+        for i in range(len(values) - 3):
+            drop = values[i + 3] - values[i]
+            if drop < best_drop:
+                best_drop = drop
+                best_i = i
+        danger = {
+            "start": labels[best_i],
+            "end": labels[best_i + 3],
+            "delta_hpa": round(best_drop, 1)
+        }
+    return danger
 # ----------------------------
 # API
 # ----------------------------
@@ -82,20 +101,7 @@ def api_pressure():
     if i_now >= 3:
         delta_3h = round(values[i_now] - values[i_now - 3], 1)
 
-    danger = None
-    if len(values) >= 4:
-        best_i = 0
-        best_drop = 0
-        for i in range(len(values) - 3):
-            drop = values[i + 3] - values[i]
-            if drop < best_drop:
-                best_drop = drop
-                best_i = i
-        danger = {
-            "start": labels[best_i],
-            "end": labels[best_i + 3],
-            "delta_hpa": round(best_drop, 1)
-        }
+    danger = _calc_danger_window(labels, values)
 
     risk = "安定"
     if danger:
@@ -114,7 +120,7 @@ def api_pressure():
         "danger_window": danger,
         "risk": risk
     })
-    
+
 def get_pressure_delta(lat=34.07, lon=132.99):
     """
     現在時刻を基準に、3時間前との差（hPa）を返す。
@@ -132,3 +138,18 @@ def get_pressure_delta(lat=34.07, lon=132.99):
         return round(values[i_now] - values[i_now - 3], 1)
 
     return None
+
+def get_danger_delta_hpa(lat=34.07, lon=132.99):
+    """
+    48時間の予測から「最悪3時間の下げ幅（hPa）」だけ返す。
+    api_pressure() の danger_window.delta_hpa と同じ定義。
+    """
+    labels, values = fetch_pressure(lat, lon)
+    if not values:
+        return None
+
+    danger = _calc_danger_window(labels, values)
+    if not danger:
+        return None
+
+    return danger["delta_hpa"]
