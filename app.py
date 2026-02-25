@@ -146,8 +146,8 @@ def health():
             datetime.now().isoformat(timespec="seconds"),
             score_int,
             note,
-            delta
-    )
+            delta,
+    ),
 )
         conn.commit()
         conn.close()
@@ -157,7 +157,7 @@ def health():
 
     conn = get_conn()
     logs = conn.execute(
-        "SELECT log_at, score, note FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+        "SELECT log_at, score, note, pressure_delta FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
         (current_user.id,)
     ).fetchall()
     conn.close()

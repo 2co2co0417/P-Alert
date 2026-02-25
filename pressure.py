@@ -114,3 +114,21 @@ def api_pressure():
         "danger_window": danger,
         "risk": risk
     })
+    
+def get_pressure_delta(lat=34.07, lon=132.99):
+    """
+    現在時刻を基準に、3時間前との差（hPa）を返す。
+    api_pressure() の delta_3h と同じ定義。
+    """
+    labels, values = fetch_pressure(lat, lon)
+    if not values:
+        return None
+
+    i_now = _find_now_index(labels)
+    if i_now is None:
+        return None
+
+    if i_now >= 3:
+        return round(values[i_now] - values[i_now - 3], 1)
+
+    return None
