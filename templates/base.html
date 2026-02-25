@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}P-Alert{% endblock %}</title>
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+/* ===== 全体 ===== */
+body {
+  font-family: sans-serif;
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 16px;
+  background: linear-gradient(to bottom, #eef2ff, #f8fafc);
+}
+
+/* ===== ヘッダー ===== */
+.topbar {
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  margin-bottom: 24px;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== ナビボタン ===== */
+.nav-btn {
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: white !important;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+/* 👇 今いるページだけ少し大きく */
+.nav-btn.active {
+  transform: scale(1.12);
+  background: #2563eb;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* ログアウトは赤 */
+.logout-btn {
+  background: #ef4444;
+}
+
+/* ===== カード ===== */
+.card,
+.dashboard-card-modern {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+
+/* ===== 共通ボタン ===== */
+button,
+.cta-button,
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  display: inline-block;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+button:hover,
+.cta-button:hover,
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* ===== フラッシュ ===== */
+.flash {
+  background:#fff7e6;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:16px;
+}
+</style>
+
+{% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+{% if current_user.is_authenticated %}
+<div class="topbar">
+  <h1 style="margin:0;">P-Alert MVP</h1>
+
+  <div class="nav-buttons">
+
+    <a href="{{ url_for('pressure.index') }}"
+       class="nav-btn {% if request.endpoint == 'pressure.index' %}active{% endif %}">
+       気圧
+    </a>
+
+    <a href="{{ url_for('health') }}"
+       class="nav-btn {% if request.endpoint == 'health' %}active{% endif %}">
+       体調
+    </a>
+
+    <a href="{{ url_for('settei.settei_home') }}"
+       class="nav-btn {% if request.endpoint == 'settei.settei_home' %}active{% endif %}">
+       設定
+    </a>
+
+    <a href="{{ url_for('auth.logout') }}"
+       class="nav-btn logout-btn">
+       ログアウト
+    </a>
+
+  </div>
+</div>
+{% endif %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash">
+      {% for msg in messages %}
+        <div>• {{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

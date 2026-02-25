@@ -1,59 +1,194 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>P-Alert MVP - 体調記録</title>
-</head>
-<body style="font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px;">
+{% extends "base.html" %}
+{% block title %}体調記録{% endblock %}
 
-  <div style="display:flex; justify-content: space-between; align-items:center;">
-    <h1>P-Alert MVP</h1>
-    <div>
-      <a href="/">気圧へ</a> |
-      <a href="/logout">ログアウト</a>
-    </div>
+{% block extra_css %}
+<style>
+
+/* ===== スコア表示 ===== */
+.score-display {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 16px;
+  transition: 0.3s;
+  color: white;
+}
+
+/* ===== スライダー ===== */
+input[type="range"] {
+  width: 100%;
+  appearance: none;
+  height: 8px;
+  border-radius: 10px;
+  outline: none;
+  background: linear-gradient(to right, #60a5fa, #fbbf24, #ef4444);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #3b82f6;
+  cursor: pointer;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* ===== メモ欄 ===== */
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  min-height: 110px;
+  resize: vertical;
+}
+
+/* ===== 履歴横並び ===== */
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-left {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;   /* ← 日付と時間を同じ太さに */
+  color: #333;        /* ← 同じ色に */
+}
+
+.score-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>体調記録 ~ずつうログ~</h2>
+
+<div class="card">
+<form method="post" action="/health">
+
+  <div class="score-display" id="scoreLabel">中</div>
+
+  <input type="range"
+         name="score"
+         min="1"
+         max="5"
+         step="1"
+         value="3"
+         oninput="updateScore(this.value)">
+
+  <div class="range-labels">
+    <span>弱</span>
+    <span></span>
+    <span>中</span>
+    <span></span>
+    <span>強</span>
   </div>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div style="background:#f5f5f5; padding:12px; border-radius:8px; margin: 12px 0;">
-        {% for msg in messages %}
-          <div>• {{ msg }}</div>
-        {% endfor %}
+  <div style="margin-top:18px;">
+    <textarea name="note" rows="3" placeholder="メモ（任意）"></textarea>
+  </div>
+
+  <button type="submit">記録する</button>
+
+</form>
+</div>
+
+<h2>履歴（最新50件）</h2>
+
+{% if logs %}
+  {% for row in logs %}
+    <div class="card history-row" style="flex-direction:column; gap:6px;">
+
+      <!-- 1行目：日時 + 変動気圧 + バッジ -->
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+
+        <div class="history-left">
+          <span>{{ row["log_at"][:10] }}</span>
+          <span>{{ row["log_at"][11:16] }}</span>
+
+          {% if row["current_hpa"] is not none %}
+            <span style="margin-left:10px; font-weight:600;">
+               {{ "%.1f"|format(row["current_hpa"]) }} hPa
+            </span>
+          {% endif %}
+
+          {% if row["danger_delta_hpa"] is not none %}
+            <span style="margin-left:8px; color:#666;">
+              （{{ "%.1f"|format(row["danger_delta_hpa"]) }} hPa）
+            </span>
+          {% endif %}
+        </div>
+
+        <div>
+          {% if row["score"] <= 2 %}
+            <span class="score-badge" style="background:#60a5fa;">弱</span>
+          {% elif row["score"] == 3 %}
+            <span class="score-badge" style="background:#fbbf24;">中</span>
+          {% else %}
+            <span class="score-badge" style="background:#ef4444;">強</span>
+          {% endif %}
+        </div>
+
       </div>
-    {% endif %}
-  {% endwith %}
 
-  <h2 style="margin-top:16px;">体調記録（ずつうログ）</h2>
+      <!-- 2行目：メモ（任意） -->
+      {% if row["note"] %}
+        <div style="color:#666; font-size:0.95em; width:100%; text-align:left; white-space:pre-wrap;">
+          {{ row["note"] }}
+        </div>
+      {% endif %}
 
-  <form method="post" action="/health" style="background:#f7fbff; padding:12px; border-radius:10px;">
-    <div style="margin: 8px 0;">
-      <label>体調スコア（1〜10）：</label><br>
-      <input name="score" type="number" min="1" max="10" required style="width:100%; padding:10px;">
     </div>
-    <div style="margin: 8px 0;">
-      <label>メモ（任意）：</label><br>
-      <textarea name="note" rows="3" style="width:100%; padding:10px;"></textarea>
-    </div>
-    <button type="submit" style="padding:10px 16px;">記録する</button>
-  </form>
+  {% endfor %}
+{% else %}
+  <div class="card">まだ記録がありません。</div>
+{% endif %}
 
-  <h2 style="margin-top: 18px;">履歴（最新50件）</h2>
+{% endblock %}
 
-  {% if logs %}
-    <ul>
-      {% for row in logs %}
-        <li style="margin: 10px 0;">
-          <div><strong>{{ row["log_at"] }}</strong></div>
-          <div>スコア：{{ row["score"] }}</div>
-          <div>メモ：{{ row["note"] or "" }}</div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>まだ記録がありません。</p>
-  {% endif %}
+{% block extra_js %}
+<script>
+function updateScore(val) {
 
-</body>
-</html>
+  let labelText = "";
+  let color = "";
+
+  if (val <= 2) {
+    labelText = "弱";
+    color = "#60a5fa";
+  } else if (val == 3) {
+    labelText = "中";
+    color = "#fbbf24";
+  } else {
+    labelText = "強";
+    color = "#ef4444";
+  }
+
+  const label = document.getElementById("scoreLabel");
+  label.innerText = labelText;
+  label.style.background = color;
+}
+
+updateScore(3);
+</script>
+{% endblock %}

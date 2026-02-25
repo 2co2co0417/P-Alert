@@ -5,8 +5,11 @@ async function drawPressureChart() {
     const res = await fetch("/api/pressure");
     const data = await res.json();
 
-    const labels = Array.isArray(data.labels) ? data.labels : [];
-    const values = Array.isArray(data.values) ? data.values : [];
+    // グラフは display_labels を優先（なければ labels）
+const labels = Array.isArray(data.display_labels) ? data.display_labels
+             : (Array.isArray(data.labels) ? data.labels : []);
+
+const values = Array.isArray(data.values) ? data.values : [];
 
     const canvas = document.getElementById("pressureChart");
     if (!canvas || labels.length < 2 || values.length < 2) return;
@@ -24,6 +27,12 @@ async function drawPressureChart() {
     // 危険区間表示
     let dangerLine = "要注意：--";
 
+    // 年を除いて表示する関数
+    const shortDate = (s) =>
+      (typeof s === "string" && s.length >= 16)
+        ? s.slice(5, 16)   // "MM-DD HH:MM"
+        : s;
+
     if (data.danger_window?.start && data.danger_window?.end) {
       const dh = data.danger_window.delta_hpa;
 
@@ -32,7 +41,7 @@ async function drawPressureChart() {
         : "";
 
       dangerLine =
-        `要注意：${data.danger_window.start} 〜 ${data.danger_window.end} ${dhTxt}`;
+        `要注意：${shortDate(data.danger_window.start)} 〜 ${shortDate(data.danger_window.end)} ${dhTxt}`;
     }
 
     document.getElementById("dangerText").textContent = dangerLine;
@@ -54,7 +63,9 @@ async function drawPressureChart() {
     ========================== */
 
     const ctx = canvas.getContext("2d");
-
+    const nowIndex = Number.isInteger(data.i_now) ? data.i_now : null;
+    const dangerStart = Number.isInteger(data.danger_window?.start_i) ? data.danger_window.start_i : null;
+    const dangerEnd = Number.isInteger(data.danger_window?.end_i) ? data.danger_window.end_i : null;
     // 既存グラフがあれば破棄（メモリ対策）
     if (chartInstance) {
       chartInstance.destroy();
@@ -87,6 +98,35 @@ async function drawPressureChart() {
         plugins: {
           legend: {
             display: true
+          },
+
+          annotation: {
+            annotations: {
+              // 🟨 要注意の時間帯：網掛け（帯）
+              dangerBox: (dangerStart != null && dangerEnd != null) ? {
+                type: "box",
+                xMin: dangerStart,
+                xMax: dangerEnd,
+                xScaleID: "x",
+                backgroundColor: "rgba(255, 193, 7, 0.18)",
+                borderWidth: 0
+              } : undefined,
+
+              // 🔴 現在の位置：縦線
+              nowLine: (nowIndex != null) ? {
+                type: "line",
+                xMin: nowIndex,
+                xMax: nowIndex,
+                xScaleID: "x",
+                borderColor: "rgba(220, 38, 38, 0.9)",
+                borderWidth: 2,
+                label: {
+                  display: true,
+                  content: "現在",
+                  position: "start"
+                }
+              } : undefined
+            }
           }
         },
 
@@ -98,6 +138,7 @@ async function drawPressureChart() {
             }
           },
           x: {
+            type: "category",
             ticks: {
               maxTicksLimit: 6
             }
