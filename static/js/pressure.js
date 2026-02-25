@@ -64,16 +64,13 @@ async function drawPressureChart() {
     const res = await fetch("/api/pressure");
     const data = await res.json();
 
-<<<<<<< HEAD
-    const labels = data.labels;
-    const values = data.values;
-=======
+
     // グラフは display_labels を優先（なければ labels）
 const labels = Array.isArray(data.display_labels) ? data.display_labels
              : (Array.isArray(data.labels) ? data.labels : []);
 
 const values = Array.isArray(data.values) ? data.values : [];
->>>>>>> origin/MVP-GORO
+
 
     if (!labels || !values || labels.length < 2) return;
 
@@ -86,11 +83,9 @@ const values = Array.isArray(data.values) ? data.values : [];
     document.getElementById("riskBadge").textContent =
       data.risk ?? "---";
 
-<<<<<<< HEAD
     const ctx = document.getElementById("pressureChart").getContext("2d");
 
     if (chartInstance) chartInstance.destroy();
-=======
     // 年を除いて表示する関数
     const shortDate = (s) =>
       (typeof s === "string" && s.length >= 16)
@@ -126,7 +121,6 @@ const values = Array.isArray(data.values) ? data.values : [];
        Chart.js グラフ描画
     ========================== */
 
-    const ctx = canvas.getContext("2d");
     const nowIndex = Number.isInteger(data.i_now) ? data.i_now : null;
     const dangerStart = Number.isInteger(data.danger_window?.start_i) ? data.danger_window.start_i : null;
     const dangerEnd = Number.isInteger(data.danger_window?.end_i) ? data.danger_window.end_i : null;
@@ -134,8 +128,6 @@ const values = Array.isArray(data.values) ? data.values : [];
     if (chartInstance) {
       chartInstance.destroy();
     }
->>>>>>> origin/MVP-GORO
-
     chartInstance = new Chart(ctx, {
       type: "line",
       data: {
@@ -153,9 +145,7 @@ const values = Array.isArray(data.values) ? data.values : [];
       options: {
         responsive: true,
         maintainAspectRatio: false,
-<<<<<<< HEAD
-        animation: false
-=======
+
 
         animation: false, // 🔥 サイズ暴れ防止
 
@@ -212,7 +202,6 @@ const values = Array.isArray(data.values) ? data.values : [];
             }
           }
         }
->>>>>>> origin/MVP-GORO
       }
     });
 

@@ -1,54 +1,24 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, redirect, url_for, jsonify
 from datetime import datetime
 from flask_login import login_required, current_user
-import sqlite3
 import json
 import urllib.request
-import os
 
 pressure_bp = Blueprint("pressure", __name__)
 
-# =========================
-# DB設定
-# =========================
-DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-# =========================
+# ----------------------------
 # ダッシュボード画面
-# =========================
+# ----------------------------
 @pressure_bp.route("/")
 @login_required
 def index():
-
-    db = get_db()
-
-    row = db.execute(
-        "SELECT preferred_drinks FROM user_settings WHERE user_id = ?",
-        (current_user.id,)
-    ).fetchone()
-
-    db.close()
-
     preferred = []
-
-    if row and "preferred_drinks" in row.keys() and row["preferred_drinks"]:
-        try:
-            preferred = json.loads(row["preferred_drinks"])
-        except:
-            preferred = []
-
     return render_template("index.html", preferred=preferred)
 
-
-# =========================
+# ----------------------------
 # 気圧取得
-# =========================
+# ----------------------------
 def fetch_pressure(lat, lon):
     url = (
         "https://api.open-meteo.com/v1/jma?"
@@ -63,7 +33,7 @@ def fetch_pressure(lat, lon):
     times = data["hourly"]["time"]
     pressures = data["hourly"]["pressure_msl"]
 
-    labels = [t.replace("T", " ")[:16] for t in times[:48]]
+    labels = [t.replace("T", " ")[:16] for t in times[:48]]  # "YYYY-MM-DD HH:MM"
     values = [round(p, 1) for p in pressures[:48]]
 
     return labels, values
@@ -91,8 +61,11 @@ def _find_now_index(labels):
 
     return best_i
 
-
 def _calc_danger_window(labels, values):
+    """
+    48時間の series から「最悪3時間の下げ幅」を計算して返す。
+    api_pressure() の danger_window と同じ定義。
+    """
     danger = None
     if len(values) >= 4:
         best_i = 0
@@ -106,15 +79,13 @@ def _calc_danger_window(labels, values):
             "start": labels[best_i],
             "end": labels[best_i + 3],
             "delta_hpa": round(best_drop, 1),
-            "start_i": best_i,
-            "end_i": best_i + 3
+            "start_i": best_i,          # ←追加
+            "end_i": best_i + 3         # ←追加
         }
     return danger
-
-
-# =========================
+# ----------------------------
 # API
-# =========================
+# ----------------------------
 @login_required
 @pressure_bp.route("/api/pressure")
 def api_pressure():
@@ -124,7 +95,9 @@ def api_pressure():
     if not values:
         return jsonify({"error": "no data"}), 500
 
-    display_labels = [lb[11:16] for lb in labels]
+    # グラフ表示だけ年なし（時刻だけ）
+    display_labels = [lb[11:16] for lb in labels]  # "HH:MM"
+    # もし「MM-DD HH:MM」にしたいなら → display_labels = [lb[5:16] for lb in labels]
 
     i_now = _find_now_index(labels)
 
@@ -135,65 +108,33 @@ def api_pressure():
     if i_now >= 3:
         delta_3h = round(values[i_now] - values[i_now - 3], 1)
 
-    # 夜モード（15:00〜翌3:00）
-    now = datetime.now()
-    current_hour = now.hour
-    is_night_mode = (current_hour >= 15 or current_hour <= 3)
+    danger = _calc_danger_window(labels, values)
 
-    danger = None
     risk = "安定"
-
-    if is_night_mode:
-
-        # 今から8時間の最大下降幅
-        best_drop = 0
-        best_start = None
-        best_end = None
-
-        end_index = min(i_now + 8, len(values) - 1)
-
-        for i in range(i_now, end_index):
-            for j in range(i + 1, end_index + 1):
-                drop = values[j] - values[i]
-                if drop < best_drop:
-                    best_drop = drop
-                    best_start = labels[i]
-                    best_end = labels[j]
-
-        if best_start:
-            danger = {
-                "start": best_start,
-                "end": best_end,
-                "delta_hpa": round(best_drop, 1)
-            }
-
-            drop_abs = abs(best_drop)
-
-            if drop_abs >= 8:
-                risk = "警戒"
-            elif drop_abs >= 4:
-                risk = "注意"
-            else:
-                risk = "安定"
+    if danger:
+        drop3 = abs(danger["delta_hpa"])
+        if drop3 >= 8:
+            risk = "警戒"
+        elif drop3 >= 4:
+            risk = "注意"
 
     return jsonify({
         "labels": labels,
         "display_labels": display_labels,
         "values": values,
-        "i_now": i_now,
+        "i_now": i_now, 
         "current_hpa": current_hpa,
         "current_time": current_time,
         "delta_3h": delta_3h,
         "danger_window": danger,
-        "risk": risk,
-        "is_night_mode": is_night_mode
+        "risk": risk
     })
 
-
-# =========================
-# 共通ユーティリティ
-# =========================
 def get_pressure_delta(lat=34.07, lon=132.99):
+    """
+    現在時刻を基準に、3時間前との差（hPa）を返す。
+    api_pressure() の delta_3h と同じ定義。
+    """
     labels, values = fetch_pressure(lat, lon)
     if not values:
         return None
@@ -207,8 +148,11 @@ def get_pressure_delta(lat=34.07, lon=132.99):
 
     return None
 
-
 def get_danger_delta_hpa(lat=34.07, lon=132.99):
+    """
+    48時間の予測から「最悪3時間の下げ幅（hPa）」だけ返す。
+    api_pressure() の danger_window.delta_hpa と同じ定義。
+    """
     labels, values = fetch_pressure(lat, lon)
     if not values:
         return None
@@ -219,8 +163,11 @@ def get_danger_delta_hpa(lat=34.07, lon=132.99):
 
     return danger["delta_hpa"]
 
-
 def get_current_hpa(lat=34.07, lon=132.99):
+    """
+    今のインデックス（i_now）時点の気圧（hPa）を返す。
+    index画面の current_hpa と同じ定義。
+    """
     labels, values = fetch_pressure(lat, lon)
     if not values:
         return None
@@ -229,4 +176,4 @@ def get_current_hpa(lat=34.07, lon=132.99):
     if i_now is None:
         return None
 
-    return values[i_now]
+    return values[i_now]    
