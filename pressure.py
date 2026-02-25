@@ -92,7 +92,6 @@ def _find_now_index(labels):
 
     return best_i
 
-<<<<<<< HEAD
 def _calc_danger_window(labels, values):
     """
     48時間の series から「最悪3時間の下げ幅」を計算して返す。
@@ -118,12 +117,6 @@ def _calc_danger_window(labels, values):
 # ----------------------------
 # API
 # ----------------------------
-=======
-
-# =========================
-# API
-# =========================
->>>>>>> MVP-mkmaguro
 @login_required
 @pressure_bp.route("/api/pressure")
 def api_pressure():
@@ -133,38 +126,28 @@ def api_pressure():
     if not values:
         return jsonify({"error": "no data"}), 500
 
-<<<<<<< HEAD
     # グラフ表示だけ年なし（時刻だけ）
     display_labels = [lb[11:16] for lb in labels]  # "HH:MM"
     # もし「MM-DD HH:MM」にしたいなら → display_labels = [lb[5:16] for lb in labels]
 
-=======
->>>>>>> MVP-mkmaguro
     i_now = _find_now_index(labels)
 
     current_hpa = values[i_now]
     current_time = labels[i_now]
 
-<<<<<<< HEAD
-=======
     # =========================
     # 3時間差（表示用復活）
     # =========================
->>>>>>> MVP-mkmaguro
     delta_3h = None
     if i_now >= 3:
         delta_3h = round(values[i_now] - values[i_now - 3], 1)
 
-<<<<<<< HEAD
-    danger = _calc_danger_window(labels, values)
-=======
     # =========================
     # 夜時間帯判定（15:00〜翌3:00）
     # =========================
     now = datetime.now()
     current_hour = now.hour
     is_night_mode = (current_hour >= 15 or current_hour <= 3)
->>>>>>> MVP-mkmaguro
 
     danger = None
     risk = "安定"
@@ -213,7 +196,6 @@ def api_pressure():
         "current_time": current_time,
         "delta_3h": delta_3h,
         "danger_window": danger,
-<<<<<<< HEAD
         "risk": risk
     })
 
@@ -264,8 +246,6 @@ def get_current_hpa(lat=34.07, lon=132.99):
         return None
 
     return values[i_now]    
-=======
         "risk": risk,
         "is_night_mode": is_night_mode
     })
->>>>>>> MVP-mkmaguro
