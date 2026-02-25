@@ -5,8 +5,11 @@ async function drawPressureChart() {
     const res = await fetch("/api/pressure");
     const data = await res.json();
 
-    const labels = Array.isArray(data.labels) ? data.labels : [];
-    const values = Array.isArray(data.values) ? data.values : [];
+    // グラフは display_labels を優先（なければ labels）
+const labels = Array.isArray(data.display_labels) ? data.display_labels
+             : (Array.isArray(data.labels) ? data.labels : []);
+
+const values = Array.isArray(data.values) ? data.values : [];
 
     const canvas = document.getElementById("pressureChart");
     if (!canvas || labels.length < 2 || values.length < 2) return;

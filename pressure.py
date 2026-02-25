@@ -32,7 +32,7 @@ def fetch_pressure(lat, lon):
     times = data["hourly"]["time"]
     pressures = data["hourly"]["pressure_msl"]
 
-    labels = [t.replace("T", " ")[:16] for t in times[:48]]
+    labels = [t.replace("T", " ")[:16] for t in times[:48]]  # "YYYY-MM-DD HH:MM"
     values = [round(p, 1) for p in pressures[:48]]
 
     return labels, values
@@ -92,6 +92,10 @@ def api_pressure():
     if not values:
         return jsonify({"error": "no data"}), 500
 
+    # グラフ表示だけ年なし（時刻だけ）
+    display_labels = [lb[11:16] for lb in labels]  # "HH:MM"
+    # もし「MM-DD HH:MM」にしたいなら → display_labels = [lb[5:16] for lb in labels]
+
     i_now = _find_now_index(labels)
 
     current_hpa = values[i_now]
@@ -113,6 +117,7 @@ def api_pressure():
 
     return jsonify({
         "labels": labels,
+        "display_labels": display_labels,
         "values": values,
         "current_hpa": current_hpa,
         "current_time": current_time,
