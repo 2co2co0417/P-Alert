@@ -16,6 +16,7 @@ from auth import auth_bp
 from pressure import pressure_bp
 from pressure import get_pressure_delta
 from pressure import get_danger_delta_hpa
+from pressure import get_current_hpa
 from settei import settei_bp
 
 # =========================
@@ -139,19 +140,36 @@ def health():
             return redirect(url_for("health"))
 
         conn = get_conn()
-        delta = get_pressure_delta()
-        danger_delta = get_danger_delta_hpa()
+
+        # 外部APIが落ちても health が落ちないようにする
+        try:
+            delta = get_pressure_delta()
+        except Exception:
+            delta = None
+
+        try:
+            current_hpa = get_current_hpa()
+        except Exception:
+            current_hpa = None
+
+        try:
+            danger_delta = get_danger_delta_hpa()
+        except Exception:
+            danger_delta = None
+
         conn.execute(
-            "INSERT INTO logs (user_id, log_at, score, note, pressure_delta, danger_delta_hpa) VALUES (?, ?, ?, ?, ?, ?)",
-    (
-            current_user.id,
-            datetime.now().isoformat(timespec="seconds"),
-            score_int,
-            note,
-            delta,
-            danger_delta,
-    ),
-)
+            "INSERT INTO logs (user_id, log_at, score, note, pressure_delta, danger_delta_hpa, current_hpa) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                current_user.id,
+                datetime.now().isoformat(timespec="seconds"),
+                score_int,
+                note,
+                delta,
+                danger_delta,
+                current_hpa,
+            ),
+        )
         conn.commit()
         conn.close()
 
@@ -160,7 +178,7 @@ def health():
 
     conn = get_conn()
     logs = conn.execute(
-        "SELECT log_at, score, note, pressure_delta, danger_delta_hpa FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+        "SELECT log_at, score, note, pressure_delta, danger_delta_hpa, current_hpa FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
         (current_user.id,)
     ).fetchall()
     conn.close()

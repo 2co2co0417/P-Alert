@@ -153,3 +153,18 @@ def get_danger_delta_hpa(lat=34.07, lon=132.99):
         return None
 
     return danger["delta_hpa"]
+
+def get_current_hpa(lat=34.07, lon=132.99):
+    """
+    今のインデックス（i_now）時点の気圧（hPa）を返す。
+    index画面の current_hpa と同じ定義。
+    """
+    labels, values = fetch_pressure(lat, lon)
+    if not values:
+        return None
+
+    i_now = _find_now_index(labels)
+    if i_now is None:
+        return None
+
+    return values[i_now]    
