@@ -1,192 +1,82 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>P-Alert MVP</title>
-</head>
-<body style="font-family: sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px;">
+{% extends "base.html" %}
+{% block title %}気圧ダッシュボード{% endblock %}
 
-  <div style="display:flex; justify-content: space-between; align-items:center;">
-    <h1>P-Alert MVP</h1>
-    <a href="/logout">ログアウト</a>
+{% block content %}
+
+<div class="page-container">
+
+  <!-- ========================= -->
+  <!-- 🍻 今夜の飲酒ヒーロー -->
+  <!-- ========================= -->
+  <div class="dashboard-card-modern"
+       style="margin-top:40px; background:#f8fafc;">
+
+    <h2 style="text-align:center; margin-bottom:20px;">
+      🍻 今夜、飲めそう？
+    </h2>
+
+    <div id="drinkList">
+      <!-- JSで動的生成 -->
+    </div>
+
   </div>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div style="background:#f5f5f5; padding:12px; border-radius:8px; margin: 12px 0;">
-        {% for msg in messages %}
-          <div>• {{ msg }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-<h2>気圧ダッシュボード</h2>
+  <!-- ========================= -->
+  <!-- 今日の気圧 -->
+  <!-- ========================= -->
+  <div class="top-center" style="margin-top:40px;">
 
-<div style="background:#fff7e6; padding:14px; border-radius:12px; margin-bottom:16px;">
+    <div class="sub-title" style="font-size:20px;">
+      今日の気圧
+    </div>
 
-  <!-- 上段：タイトル＋バッジ -->
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <strong>48時間の気圧リスク</strong>
-
-    <span id="riskBadge"
-      style="padding:6px 12px; border-radius:999px; background:#eee;">
+    <div id="riskBadge"
+         class="risk-pill"
+         style="margin-top:16px; font-size:18px;">
       ---
-    </span>
+    </div>
+
   </div>
 
-  <!-- ★ここが追加した説明文 -->
-  <div style="font-size:12px; color:#666; margin-top:6px;">
-    安定：±0〜3hPa　注意：±4〜7hPa　警戒：±8hPa以上
-  </div>
+  <!-- ========================= -->
+  <!-- 気圧詳細カード -->
+  <!-- ========================= -->
+  <div class="dashboard-card-modern" style="margin-top:30px;">
 
-  <!-- 中段：変化量 -->
-  <div style="font-size:32px; font-weight:700; margin:12px 0;">
-    <span id="deltaText">--</span> hPa
-  </div>
+    <div class="current-center">
+      <div class="label">現在の気圧</div>
 
-  <!-- 下段：グラフ -->
-  <canvas id="pressureChart" height="120" style="width:100%;"></canvas>
+      <div class="big-value">
+        <span id="currentText">--</span> hPa
+      </div>
+
+      <div class="update-time">
+        更新：<span id="currentTimeText">--</span>
+      </div>
+    </div>
+
+    <div id="dangerText"
+         class="danger-text"
+         style="margin-top:12px; text-align:center;">
+    </div>
+
+    <div class="chart-wrapper" style="margin-top:20px;">
+      <canvas id="pressureChart"></canvas>
+    </div>
+
+  </div>
 
 </div>
 
+{% endblock %}
 
-  
-
-  <canvas id="pressureChart" height="120" style="width:100%;"></canvas>
-
-</div>
-
-  <h2>体調記録</h2>
-
-  <form method="post" action="/" style="background:#f7fbff; padding:12px; border-radius:10px;">
-    <div style="margin: 8px 0;">
-      <label>体調スコア（1〜10）：</label><br>
-      <input name="score" type="number" min="1" max="10" required style="width:100%; padding:10px;">
-    </div>
-    <div style="margin: 8px 0;">
-      <label>メモ（任意）：</label><br>
-      <textarea name="note" rows="3" style="width:100%; padding:10px;"></textarea>
-    </div>
-    <button type="submit" style="padding:10px 16px;">記録する</button>
-  </form>
-
-  <h2 style="margin-top: 18px;">履歴（最新50件）</h2>
-  {% if logs %}
-    <ul>
-      {% for row in logs %}
-        <li style="margin: 10px 0;">
-          <div><strong>{{ row["log_at"] }}</strong></div>
-          <div>スコア：{{ row["score"] }}</div>
-          <div>メモ：{{ row["note"] or "" }}</div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>まだ記録がありません。</p>
-  {% endif %}
-
-
+{% block extra_js %}
 
 <script>
-function drawSimpleLineChart(canvas, labels, values) {
-  const ctx = canvas.getContext("2d");
-
-  // 表示サイズを安定させる（CSSで伸び縮みしても崩れにくい）
-  const w = canvas.clientWidth || 700;
-  const h = canvas.height || 120;
-  canvas.width = w;
-  canvas.height = h;
-
-  // 余白
-  const padL = 40;
-  const padR = 10;
-  const padT = 10;
-  const padB = 25;
-
-  // min/max
-  let minV = Math.min(...values);
-  let maxV = Math.max(...values);
-  if (minV === maxV) { // 変化が無いときの保険
-    minV -= 1; maxV += 1;
-  }
-
-  // 背景クリア
-  ctx.clearRect(0, 0, w, h);
-
-  // 軸（最低限）
-  ctx.strokeStyle = "#cccccc";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padL, padT);
-  ctx.lineTo(padL, h - padB);
-  ctx.lineTo(w - padR, h - padB);
-  ctx.stroke();
-
-  // 目盛（上・下）
-  ctx.fillStyle = "#666";
-  ctx.font = "12px sans-serif";
-  ctx.fillText(`${maxV.toFixed(1)} hPa`, 4, padT + 10);
-  ctx.fillText(`${minV.toFixed(1)} hPa`, 4, h - padB);
-
-  // 折れ線
-  const n = values.length;
-  const x0 = padL;
-  const y0 = h - padB;
-  const x1 = w - padR;
-  const y1 = padT;
-
-  function x(i) {
-    return x0 + (x1 - x0) * (i / (n - 1));
-  }
-  function y(v) {
-    return y0 - (y0 - y1) * ((v - minV) / (maxV - minV));
-  }
-
-  ctx.strokeStyle = "#2b6cb0"; // 青っぽい線（固定）
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x(0), y(values[0]));
-  for (let i = 1; i < n; i++) {
-    ctx.lineTo(x(i), y(values[i]));
-  }
-  ctx.stroke();
-
-  // X軸ラベル：両端だけ
-  ctx.fillStyle = "#666";
-  const leftLabel = labels[0] ?? "";
-  const rightLabel = labels[n - 1] ?? "";
-  ctx.fillText(leftLabel, padL, h - 6);
-  const tw = ctx.measureText(rightLabel).width;
-  ctx.fillText(rightLabel, w - padR - tw, h - 6);
-}
-
-async function drawPressureChart() {
-  const res = await fetch("/api/pressure");
-  const data = await res.json();
-
-  // 変化量表示
-  const d = data.delta_hpa;
-document.getElementById("deltaText").textContent =
-  (d > 0 ? "+" : "") + d;
-
-
-  // リスク表示（色）
-  const badge = document.getElementById("riskBadge");
-  badge.textContent = data.risk;
-
-  if (data.risk === "警戒") badge.style.background = "#ffcccc";
-  else if (data.risk === "注意") badge.style.background = "#ffe5b4";
-  else badge.style.background = "#d9fdd3";
-
-  // グラフ描画（Chart.js不要）
-  const canvas = document.getElementById("pressureChart");
-  drawSimpleLineChart(canvas, data.labels, data.values);
-}
-
-// 画面表示後に描く
-window.addEventListener("load", drawPressureChart);
+  const preferredDrinks = {{ preferred|tojson }};
 </script>
 
-</body>
-</html>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/pressure.js') }}"></script>
+
+{% endblock %}

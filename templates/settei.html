@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}設定{% endblock %}
+
+{% block content %}
+
+<h2>あなたについて教えてください</h2>
+
+<div class="card">
+
+  <form method="POST" action="{{ url_for('settei.settei_home') }}"
+        style="display:grid; gap:24px;">
+
+    <!-- ============================= -->
+    <!-- 🍺 よく飲むお酒 -->
+    <!-- ============================= -->
+
+    <div>
+      <div style="font-weight:600; margin-bottom:12px;">
+        よく飲むお酒（複数選択）
+      </div>
+
+      <div class="drink-tag-container">
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="beer">
+          <span>🍺 ビール</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="red_wine">
+          <span>🍷 赤ワイン</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="white_wine">
+          <span>🥂 白ワイン</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="shochu">
+          <span>🍶 焼酎</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="whisky">
+          <span>🥃 ウイスキー</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="sake">
+          <span>🍶 日本酒</span>
+        </label>
+
+      </div>
+    </div>
+
+    <button type="submit" class="cta-button">
+      保存する
+    </button>
+
+  </form>
+
+</div>
+
+{% endblock %}
