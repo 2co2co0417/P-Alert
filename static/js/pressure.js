@@ -64,8 +64,16 @@ async function drawPressureChart() {
     const res = await fetch("/api/pressure");
     const data = await res.json();
 
+<<<<<<< HEAD
     const labels = data.labels;
     const values = data.values;
+=======
+    // グラフは display_labels を優先（なければ labels）
+const labels = Array.isArray(data.display_labels) ? data.display_labels
+             : (Array.isArray(data.labels) ? data.labels : []);
+
+const values = Array.isArray(data.values) ? data.values : [];
+>>>>>>> origin/MVP-GORO
 
     if (!labels || !values || labels.length < 2) return;
 
@@ -78,9 +86,55 @@ async function drawPressureChart() {
     document.getElementById("riskBadge").textContent =
       data.risk ?? "---";
 
+<<<<<<< HEAD
     const ctx = document.getElementById("pressureChart").getContext("2d");
 
     if (chartInstance) chartInstance.destroy();
+=======
+    // 年を除いて表示する関数
+    const shortDate = (s) =>
+      (typeof s === "string" && s.length >= 16)
+        ? s.slice(5, 16)   // "MM-DD HH:MM"
+        : s;
+
+    if (data.danger_window?.start && data.danger_window?.end) {
+      const dh = data.danger_window.delta_hpa;
+
+      const dhTxt = dh != null
+        ? `（${(dh > 0 ? "+" : "") + Number(dh).toFixed(1)} hPa）`
+        : "";
+
+      dangerLine =
+        `要注意：${shortDate(data.danger_window.start)} 〜 ${shortDate(data.danger_window.end)} ${dhTxt}`;
+    }
+
+    document.getElementById("dangerText").textContent = dangerLine;
+
+    // バッジ更新
+    const badge = document.getElementById("riskBadge");
+    badge.textContent = data.risk ?? "---";
+
+    if (data.risk === "警戒") {
+      badge.style.background = "#ffcdd2";
+    } else if (data.risk === "注意") {
+      badge.style.background = "#ffe5b4";
+    } else {
+      badge.style.background = "#c8e6c9";
+    }
+
+    /* =========================
+       Chart.js グラフ描画
+    ========================== */
+
+    const ctx = canvas.getContext("2d");
+    const nowIndex = Number.isInteger(data.i_now) ? data.i_now : null;
+    const dangerStart = Number.isInteger(data.danger_window?.start_i) ? data.danger_window.start_i : null;
+    const dangerEnd = Number.isInteger(data.danger_window?.end_i) ? data.danger_window.end_i : null;
+    // 既存グラフがあれば破棄（メモリ対策）
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+>>>>>>> origin/MVP-GORO
 
     chartInstance = new Chart(ctx, {
       type: "line",
@@ -99,7 +153,66 @@ async function drawPressureChart() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+<<<<<<< HEAD
         animation: false
+=======
+
+        animation: false, // 🔥 サイズ暴れ防止
+
+        layout: {
+          padding: 0
+        },
+
+        plugins: {
+          legend: {
+            display: true
+          },
+
+          annotation: {
+            annotations: {
+              // 🟨 要注意の時間帯：網掛け（帯）
+              dangerBox: (dangerStart != null && dangerEnd != null) ? {
+                type: "box",
+                xMin: dangerStart,
+                xMax: dangerEnd,
+                xScaleID: "x",
+                backgroundColor: "rgba(255, 193, 7, 0.18)",
+                borderWidth: 0
+              } : undefined,
+
+              // 🔴 現在の位置：縦線
+              nowLine: (nowIndex != null) ? {
+                type: "line",
+                xMin: nowIndex,
+                xMax: nowIndex,
+                xScaleID: "x",
+                borderColor: "rgba(220, 38, 38, 0.9)",
+                borderWidth: 2,
+                label: {
+                  display: true,
+                  content: "現在",
+                  position: "start"
+                }
+              } : undefined
+            }
+          }
+        },
+
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: "hPa"
+            }
+          },
+          x: {
+            type: "category",
+            ticks: {
+              maxTicksLimit: 6
+            }
+          }
+        }
+>>>>>>> origin/MVP-GORO
       }
     });
 

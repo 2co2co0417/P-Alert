@@ -52,7 +52,6 @@ def get_user_settings(user_id):
 def settei_home():
 
     user_id = current_user.id
-
     db = get_db()
 
     # -------------------------
@@ -81,11 +80,10 @@ def settei_home():
     s = get_user_settings(user_id)
 
     preferred = []
-    if s["preferred_drinks"]:
+    if s and "preferred_drinks" in s.keys() and s["preferred_drinks"]:
         preferred = json.loads(s["preferred_drinks"])
 
     return render_template(
         "settei.html",
         preferred=preferred
     )
-    print("DB PATH:", DB_PATH)

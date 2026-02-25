@@ -117,22 +117,46 @@ textarea {
 
 {% if logs %}
   {% for row in logs %}
-    <div class="card history-row">
+    <div class="card history-row" style="flex-direction:column; gap:6px;">
 
-      <div class="history-left">
-        <span>{{ row["log_at"][:10] }}</span>
-        <span>{{ row["log_at"][11:16] }}</span>
+      <!-- 1行目：日時 + 変動気圧 + バッジ -->
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+
+        <div class="history-left">
+          <span>{{ row["log_at"][:10] }}</span>
+          <span>{{ row["log_at"][11:16] }}</span>
+
+          {% if row["current_hpa"] is not none %}
+            <span style="margin-left:10px; font-weight:600;">
+               {{ "%.1f"|format(row["current_hpa"]) }} hPa
+            </span>
+          {% endif %}
+
+          {% if row["danger_delta_hpa"] is not none %}
+            <span style="margin-left:8px; color:#666;">
+              （{{ "%.1f"|format(row["danger_delta_hpa"]) }} hPa）
+            </span>
+          {% endif %}
+        </div>
+
+        <div>
+          {% if row["score"] <= 2 %}
+            <span class="score-badge" style="background:#60a5fa;">弱</span>
+          {% elif row["score"] == 3 %}
+            <span class="score-badge" style="background:#fbbf24;">中</span>
+          {% else %}
+            <span class="score-badge" style="background:#ef4444;">強</span>
+          {% endif %}
+        </div>
+
       </div>
 
-      <div>
-        {% if row["score"] <= 2 %}
-          <span class="score-badge" style="background:#60a5fa;">弱</span>
-        {% elif row["score"] == 3 %}
-          <span class="score-badge" style="background:#fbbf24;">中</span>
-        {% else %}
-          <span class="score-badge" style="background:#ef4444;">強</span>
-        {% endif %}
-      </div>
+      <!-- 2行目：メモ（任意） -->
+      {% if row["note"] %}
+        <div style="color:#666; font-size:0.95em; width:100%; text-align:left; white-space:pre-wrap;">
+          {{ row["note"] }}
+        </div>
+      {% endif %}
 
     </div>
   {% endfor %}

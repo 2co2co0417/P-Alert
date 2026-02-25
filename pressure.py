@@ -13,7 +13,6 @@ pressure_bp = Blueprint("pressure", __name__)
 # =========================
 DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
 
-
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -38,7 +37,7 @@ def index():
 
     preferred = []
 
-    if row and row["preferred_drinks"]:
+    if row and "preferred_drinks" in row.keys() and row["preferred_drinks"]:
         try:
             preferred = json.loads(row["preferred_drinks"])
         except:
@@ -93,6 +92,26 @@ def _find_now_index(labels):
     return best_i
 
 
+def _calc_danger_window(labels, values):
+    danger = None
+    if len(values) >= 4:
+        best_i = 0
+        best_drop = 0
+        for i in range(len(values) - 3):
+            drop = values[i + 3] - values[i]
+            if drop < best_drop:
+                best_drop = drop
+                best_i = i
+        danger = {
+            "start": labels[best_i],
+            "end": labels[best_i + 3],
+            "delta_hpa": round(best_drop, 1),
+            "start_i": best_i,
+            "end_i": best_i + 3
+        }
+    return danger
+
+
 # =========================
 # API
 # =========================
@@ -105,21 +124,18 @@ def api_pressure():
     if not values:
         return jsonify({"error": "no data"}), 500
 
+    display_labels = [lb[11:16] for lb in labels]
+
     i_now = _find_now_index(labels)
 
     current_hpa = values[i_now]
     current_time = labels[i_now]
 
-    # =========================
-    # 3時間差（表示用復活）
-    # =========================
     delta_3h = None
     if i_now >= 3:
         delta_3h = round(values[i_now] - values[i_now - 3], 1)
 
-    # =========================
-    # 夜時間帯判定（15:00〜翌3:00）
-    # =========================
+    # 夜モード（15:00〜翌3:00）
     now = datetime.now()
     current_hour = now.hour
     is_night_mode = (current_hour >= 15 or current_hour <= 3)
@@ -129,9 +145,7 @@ def api_pressure():
 
     if is_night_mode:
 
-        # =========================
         # 今から8時間の最大下降幅
-        # =========================
         best_drop = 0
         best_start = None
         best_end = None
@@ -164,7 +178,9 @@ def api_pressure():
 
     return jsonify({
         "labels": labels,
+        "display_labels": display_labels,
         "values": values,
+        "i_now": i_now,
         "current_hpa": current_hpa,
         "current_time": current_time,
         "delta_3h": delta_3h,
@@ -172,3 +188,45 @@ def api_pressure():
         "risk": risk,
         "is_night_mode": is_night_mode
     })
+
+
+# =========================
+# 共通ユーティリティ
+# =========================
+def get_pressure_delta(lat=34.07, lon=132.99):
+    labels, values = fetch_pressure(lat, lon)
+    if not values:
+        return None
+
+    i_now = _find_now_index(labels)
+    if i_now is None:
+        return None
+
+    if i_now >= 3:
+        return round(values[i_now] - values[i_now - 3], 1)
+
+    return None
+
+
+def get_danger_delta_hpa(lat=34.07, lon=132.99):
+    labels, values = fetch_pressure(lat, lon)
+    if not values:
+        return None
+
+    danger = _calc_danger_window(labels, values)
+    if not danger:
+        return None
+
+    return danger["delta_hpa"]
+
+
+def get_current_hpa(lat=34.07, lon=132.99):
+    labels, values = fetch_pressure(lat, lon)
+    if not values:
+        return None
+
+    i_now = _find_now_index(labels)
+    if i_now is None:
+        return None
+
+    return values[i_now]
