@@ -27,6 +27,12 @@ const values = Array.isArray(data.values) ? data.values : [];
     // 危険区間表示
     let dangerLine = "要注意：--";
 
+    // 年を除いて表示する関数
+    const shortDate = (s) =>
+      (typeof s === "string" && s.length >= 16)
+        ? s.slice(5, 16)   // "MM-DD HH:MM"
+        : s;
+
     if (data.danger_window?.start && data.danger_window?.end) {
       const dh = data.danger_window.delta_hpa;
 
@@ -35,7 +41,7 @@ const values = Array.isArray(data.values) ? data.values : [];
         : "";
 
       dangerLine =
-        `要注意：${data.danger_window.start} 〜 ${data.danger_window.end} ${dhTxt}`;
+        `要注意：${shortDate(data.danger_window.start)} 〜 ${shortDate(data.danger_window.end)} ${dhTxt}`;
     }
 
     document.getElementById("dangerText").textContent = dangerLine;
