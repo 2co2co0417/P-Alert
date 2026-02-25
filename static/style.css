@@ -345,3 +345,113 @@ button:active,
     transform: translateX(20px);
   }
 }
+/* ============================= */
+/* 🍺 飲酒コンディション */
+/* ============================= */
+
+.drink-card {
+  margin-top: 20px;
+}
+
+.drink-title {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.drink-delta {
+  font-size: 14px;
+  margin-bottom: 14px;
+  color: #555;
+}
+
+.drink-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drink-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.drink-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drink-icon {
+  font-size: 20px;
+}
+
+.drink-item.safe {
+  background: #e6f7ed;
+  color: #15803d;
+}
+
+.drink-item.caution {
+  background: #fff7e6;
+  color: #b45309;
+}
+
+.drink-item.danger {
+  background: #ffe5e5;
+  color: #b91c1c;
+}
+/* ============================= */
+/* 🍺 お酒タグUI（3列グリッド安定版） */
+/* ============================= */
+
+.drink-tag-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.drink-tag {
+  text-align: center;
+  cursor: pointer;
+}
+
+.drink-tag input {
+  display: none;
+}
+
+.drink-tag span {
+  display: block;
+  padding: 12px 0;
+  border-radius: 999px;
+
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+}
+
+/* 選択時 */
+.drink-tag input:checked + span {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+
+  box-shadow: 0 6px 16px rgba(59,130,246,0.3);
+  transform: translateY(-2px);
+}
+
+/* ホバー効果 */
+.drink-tag span:hover {
+  background: #e2e8f0;
+}

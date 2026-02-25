@@ -1,23 +1,51 @@
 {% extends "base.html" %}
+<<<<<<< HEAD
 {% block title %}気圧ソムリエ{% endblock %}
+=======
+{% block title %}気圧ダッシュボード{% endblock %}
+>>>>>>> MVP-mkmaguro
 
 {% block content %}
 
 <div class="page-container">
 
   <!-- ========================= -->
-  <!-- トップ -->
+  <!-- 🍻 今夜の飲酒ヒーロー -->
   <!-- ========================= -->
-  <div class="top-center">
-    <div class="app-title">⛅ P-Alert</div>
-    <div class="sub-title">今日の気圧</div>
-    <div id="riskBadge" class="risk-pill">---</div>
+  <div class="dashboard-card-modern"
+       style="margin-top:40px; background:#f8fafc;">
+
+    <h2 style="text-align:center; margin-bottom:20px;">
+      🍻 今夜、飲めそう？
+    </h2>
+
+    <div id="drinkList">
+      <!-- JSで動的生成 -->
+    </div>
+
   </div>
 
   <!-- ========================= -->
-  <!-- カード -->
+  <!-- 今日の気圧 -->
   <!-- ========================= -->
-  <div class="dashboard-card-modern">
+  <div class="top-center" style="margin-top:40px;">
+
+    <div class="sub-title" style="font-size:20px;">
+      今日の気圧
+    </div>
+
+    <div id="riskBadge"
+         class="risk-pill"
+         style="margin-top:16px; font-size:18px;">
+      ---
+    </div>
+
+  </div>
+
+  <!-- ========================= -->
+  <!-- 気圧詳細カード -->
+  <!-- ========================= -->
+  <div class="dashboard-card-modern" style="margin-top:30px;">
 
     <div class="current-center">
       <div class="label">現在の気圧</div>
@@ -33,32 +61,27 @@
 
     <div id="dangerText"
          class="danger-text"
-         style="margin-top:8px;">
+         style="margin-top:12px; text-align:center;">
     </div>
 
-    <div class="chart-wrapper">
+    <div class="chart-wrapper" style="margin-top:20px;">
       <canvas id="pressureChart"></canvas>
     </div>
 
   </div>
-
-  <!-- ========================= -->
-  <!-- ボタン -->
-  <!-- ========================= -->
-  <a href="/health" class="cta-button">
-    ✍️ 体調を記録する
-  </a>
-
-  <a href="/settei" class="cta-button">
-    設定画面
-  </a>
 
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
+
+<script>
+  const preferredDrinks = {{ preferred|tojson }};
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
 <script src="{{ url_for('static', filename='js/pressure.js') }}"></script>
+
 {% endblock %}
