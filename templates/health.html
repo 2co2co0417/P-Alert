@@ -126,9 +126,9 @@ textarea {
           <span>{{ row["log_at"][:10] }}</span>
           <span>{{ row["log_at"][11:16] }}</span>
 
-          {% if row["pressure_delta"] is not none %}
+          {% if row["danger_delta_hpa"] is not none %}
             <span style="margin-left:8px; color:#666;">
-              （{{ "%.1f"|format(row["pressure_delta"]) }} hPa）
+              （{{ "%.1f"|format(row["danger_delta_hpa"]) }} hPa）
             </span>
           {% endif %}
         </div>

@@ -15,6 +15,7 @@ from user import User
 from auth import auth_bp
 from pressure import pressure_bp
 from pressure import get_pressure_delta
+from pressure import get_danger_delta_hpa
 from settei import settei_bp
 
 # =========================
@@ -139,14 +140,16 @@ def health():
 
         conn = get_conn()
         delta = get_pressure_delta()
+        danger_delta = get_danger_delta_hpa()
         conn.execute(
-            "INSERT INTO logs (user_id, log_at, score, note, pressure_delta) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO logs (user_id, log_at, score, note, pressure_delta, danger_delta_hpa) VALUES (?, ?, ?, ?, ?, ?)",
     (
             current_user.id,
             datetime.now().isoformat(timespec="seconds"),
             score_int,
             note,
             delta,
+            danger_delta,
     ),
 )
         conn.commit()
@@ -157,7 +160,7 @@ def health():
 
     conn = get_conn()
     logs = conn.execute(
-        "SELECT log_at, score, note, pressure_delta FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+        "SELECT log_at, score, note, pressure_delta, danger_delta_hpa FROM logs WHERE user_id = ? ORDER BY id DESC LIMIT 50",
         (current_user.id,)
     ).fetchall()
     conn.close()
