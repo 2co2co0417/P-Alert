@@ -117,8 +117,8 @@ def _calc_danger_window(labels, values):
 # ----------------------------
 # API
 # ----------------------------
-@login_required
 @pressure_bp.route("/api/pressure")
+@login_required
 def api_pressure():
 
     labels, values = fetch_pressure(34.07, 132.99)
@@ -175,7 +175,9 @@ def api_pressure():
             danger = {
                 "start": best_start,
                 "end": best_end,
-                "delta_hpa": round(best_drop, 1)
+                "delta_hpa": round(best_drop, 1),
+                "start_i": labels.index(best_start),
+                "end_i": labels.index(best_end),
             }
 
             drop_abs = abs(best_drop)
@@ -233,10 +235,6 @@ def get_danger_delta_hpa(lat=34.07, lon=132.99):
     return danger["delta_hpa"]
 
 def get_current_hpa(lat=34.07, lon=132.99):
-    """
-    今のインデックス（i_now）時点の気圧（hPa）を返す。
-    index画面の current_hpa と同じ定義。
-    """
     labels, values = fetch_pressure(lat, lon)
     if not values:
         return None
@@ -245,8 +243,4 @@ def get_current_hpa(lat=34.07, lon=132.99):
     if i_now is None:
         return None
 
-    return {
-    "pressure": values[i_now],
-    "risk": risk,
-    "is_night_mode": is_night_mode
-}
+    return values[i_now]
