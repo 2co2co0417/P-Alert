@@ -1,100 +1,57 @@
 {% extends "base.html" %}
-{% block title %}アラート設定{% endblock %}
+{% block title %}設定{% endblock %}
 
 {% block content %}
 
-<h2>アラート設定</h2>
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="card" style="background:#f5f5f5;">
-      {{ messages[0] }}
-    </div>
-  {% endif %}
-{% endwith %}
+<h2>あなたについて教えてください</h2>
 
 <div class="card">
 
-  <!-- 現在の実効しきい値 -->
-  <div style="background:#eef6ff; padding:16px; border-radius:12px; margin-bottom:20px;">
-    <div style="font-weight:600;">いまの実効しきい値</div>
-
-    <div style="font-size:24px; font-weight:700; margin-top:6px;">
-      {{ "%.1f"|format(effective|default(0.0)) }} hPa
-    </div>
-
-    <div style="font-size:13px; color:#555; margin-top:10px;">
-      実効しきい値 = 基本（{{ s.base_threshold }}）
-      − 飲酒（{{ s.drink_offset }}）
-      {% if s.pollen_enabled == 1 %}
-        − 花粉（{{ s.pollen_offset }}）
-      {% else %}
-        − 花粉（0.0）
-      {% endif %}
-    </div>
-
-    <div style="font-size:13px; color:#666; margin-top:6px;">
-      ※数値が小さいほど通知が来やすくなります
-    </div>
-  </div>
-
-  <!-- 保存フォーム -->
   <form method="POST" action="{{ url_for('settei.settei_home') }}"
-        style="display:grid; gap:18px;">
+        style="display:grid; gap:24px;">
 
-    <!-- 基本アラート -->
+    <!-- ============================= -->
+    <!-- 🍺 よく飲むお酒 -->
+    <!-- ============================= -->
+
     <div>
-      <label><b>基本アラート値（hPa）</b></label><br>
-      <input type="number"
-             step="0.1"
-             name="base_threshold"
-             value="{{ s.base_threshold }}"
-             style="padding:10px; border-radius:8px; border:1px solid #ccc;">
-    </div>
-
-    <!-- 飲酒補正 -->
-    <div>
-      <label><b>飲酒補正</b></label><br>
-      {% set d = s.drink_offset %}
-      <select name="drink_choice"
-              style="padding:10px; border-radius:8px; border:1px solid #ccc;">
-
-        <option value="none" {% if d == 0.0 %}selected{% endif %}>
-          飲酒なし（0.0）
-        </option>
-
-        <option value="shochu" {% if d == 0.5 %}selected{% endif %}>
-          焼酎（0.5）
-        </option>
-
-        <option value="beer_whisky" {% if d == 1.0 %}selected{% endif %}>
-          ビール / ウイスキー（1.0）
-        </option>
-
-        <option value="wine" {% if d == 1.5 %}selected{% endif %}>
-          ワイン（1.5）
-        </option>
-
-      </select>
-    </div>
-
-    <!-- 花粉補正（トグルスイッチ版） -->
-    <div>
-      <div style="font-weight:600; margin-bottom:8px;">
-        花粉補正
+      <div style="font-weight:600; margin-bottom:12px;">
+        よく飲むお酒（複数選択）
       </div>
 
-      <label class="toggle-row">
-        <span>花粉注意報を考慮する（0.5）</span>
+      <div class="drink-tag-container">
 
-        <div class="toggle-switch">
-          <input type="checkbox"
-                 name="pollen_enabled"
-                 id="pollenToggle"
-                 {% if s.pollen_enabled == 1 %}checked{% endif %}>
-          <span class="slider"></span>
-        </div>
-      </label>
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="beer">
+          <span>🍺 ビール</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="red_wine">
+          <span>🍷 赤ワイン</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="white_wine">
+          <span>🥂 白ワイン</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="shochu">
+          <span>🍶 焼酎</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="whisky">
+          <span>🥃 ウイスキー</span>
+        </label>
+
+        <label class="drink-tag">
+          <input type="checkbox" name="preferred_drinks" value="sake">
+          <span>🍶 日本酒</span>
+        </label>
+
+      </div>
     </div>
 
     <button type="submit" class="cta-button">
@@ -102,21 +59,6 @@
     </button>
 
   </form>
-
-</div>
-
-<!-- テストアラート -->
-<div class="card" style="margin-top:20px;">
-
-  <form method="POST" action="{{ url_for('settei.test_alert') }}">
-    <button type="submit" class="cta-button" style="background:#111;">
-      テストアラート（模擬）を送る
-    </button>
-  </form>
-
-  <div style="font-size:13px; color:#666; margin-top:8px;">
-    ※いまはメール送信せず、画面に結果を表示します
-  </div>
 
 </div>
 

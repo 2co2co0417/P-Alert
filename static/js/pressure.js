@@ -1,19 +1,73 @@
 let chartInstance = null;
 
+function generateDrinkUI(delta, isNightMode) {
+
+  const container = document.getElementById("drinkList");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!isNightMode) {
+    container.innerHTML =
+      "🍃 今夜の飲酒コンディションは15時以降に表示されます";
+    return;
+  }
+
+  if (!preferredDrinks || preferredDrinks.length === 0) {
+    container.innerHTML =
+      "設定画面でお酒を選択してください 🍶";
+    return;
+  }
+
+  const drinkMap = {
+    beer: { name: "ビール", icon: "🍺", risk: 3 },
+    red_wine: { name: "赤ワイン", icon: "🍷", risk: 5 },
+    white_wine: { name: "白ワイン", icon: "🍷", risk: 4 },
+    shochu: { name: "焼酎", icon: "🍶", risk: 1 },
+    whisky: { name: "ウイスキー", icon: "🥃", risk: 4 },
+    sake: { name: "日本酒", icon: "🍶", risk: 2 }
+  };
+
+  preferredDrinks.forEach(key => {
+
+    const drink = drinkMap[key];
+    if (!drink) return;
+
+    let score = Math.abs(delta) + drink.risk;
+
+    let status = "安心してOK";
+    let cls = "safe";
+
+    if (score >= 6) {
+      status = "今日は控えよう";
+      cls = "danger";
+    } else if (score >= 4) {
+      status = "少なめに";
+      cls = "caution";
+    }
+
+    container.innerHTML += `
+      <div class="drink-item ${cls}">
+        <span class="drink-left">
+          <span class="drink-icon">${drink.icon}</span>
+          <span class="drink-name">${drink.name}</span>
+        </span>
+        <span class="drink-status">${status}</span>
+      </div>
+    `;
+  });
+}
+
+
 async function drawPressureChart() {
   try {
     const res = await fetch("/api/pressure");
     const data = await res.json();
 
-    const labels = Array.isArray(data.labels) ? data.labels : [];
-    const values = Array.isArray(data.values) ? data.values : [];
+    const labels = data.labels;
+    const values = data.values;
 
-    const canvas = document.getElementById("pressureChart");
-    if (!canvas || labels.length < 2 || values.length < 2) return;
-
-    /* =========================
-       画面の数値更新
-    ========================== */
+    if (!labels || !values || labels.length < 2) return;
 
     document.getElementById("currentText").textContent =
       data.current_hpa?.toFixed(1) ?? "--";
@@ -21,44 +75,12 @@ async function drawPressureChart() {
     document.getElementById("currentTimeText").textContent =
       data.current_time ?? "--";
 
-    // 危険区間表示
-    let dangerLine = "要注意：--";
+    document.getElementById("riskBadge").textContent =
+      data.risk ?? "---";
 
-    if (data.danger_window?.start && data.danger_window?.end) {
-      const dh = data.danger_window.delta_hpa;
+    const ctx = document.getElementById("pressureChart").getContext("2d");
 
-      const dhTxt = dh != null
-        ? `（${(dh > 0 ? "+" : "") + Number(dh).toFixed(1)} hPa）`
-        : "";
-
-      dangerLine =
-        `要注意：${data.danger_window.start} 〜 ${data.danger_window.end} ${dhTxt}`;
-    }
-
-    document.getElementById("dangerText").textContent = dangerLine;
-
-    // バッジ更新
-    const badge = document.getElementById("riskBadge");
-    badge.textContent = data.risk ?? "---";
-
-    if (data.risk === "警戒") {
-      badge.style.background = "#ffcdd2";
-    } else if (data.risk === "注意") {
-      badge.style.background = "#ffe5b4";
-    } else {
-      badge.style.background = "#c8e6c9";
-    }
-
-    /* =========================
-       Chart.js グラフ描画
-    ========================== */
-
-    const ctx = canvas.getContext("2d");
-
-    // 既存グラフがあれば破棄（メモリ対策）
-    if (chartInstance) {
-      chartInstance.destroy();
-    }
+    if (chartInstance) chartInstance.destroy();
 
     chartInstance = new Chart(ctx, {
       type: "line",
@@ -77,34 +99,15 @@ async function drawPressureChart() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-
-        animation: false, // 🔥 サイズ暴れ防止
-
-        layout: {
-          padding: 0
-        },
-
-        plugins: {
-          legend: {
-            display: true
-          }
-        },
-
-        scales: {
-          y: {
-            title: {
-              display: true,
-              text: "hPa"
-            }
-          },
-          x: {
-            ticks: {
-              maxTicksLimit: 6
-            }
-          }
-        }
+        animation: false
       }
     });
+
+    // 🔥 グラフ描画後に呼ぶ（ここが重要）
+    generateDrinkUI(
+      data.danger_window?.delta_hpa ?? 0,
+      data.is_night_mode
+    );
 
   } catch (err) {
     console.error("グラフ描画エラー:", err);

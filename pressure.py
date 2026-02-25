@@ -1,23 +1,55 @@
-from flask import Blueprint, render_template, redirect, url_for, jsonify
+from flask import Blueprint, render_template, jsonify
 from datetime import datetime
 from flask_login import login_required, current_user
+import sqlite3
 import json
 import urllib.request
+import os
 
 pressure_bp = Blueprint("pressure", __name__)
 
+# =========================
+# DB設定
+# =========================
+DB_PATH = os.path.join(os.path.dirname(__file__), "mvp.db")
 
-# ----------------------------
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+# =========================
 # ダッシュボード画面
-# ----------------------------
+# =========================
 @pressure_bp.route("/")
 @login_required
 def index():
-    return render_template("index.html")
 
-# ----------------------------
+    db = get_db()
+
+    row = db.execute(
+        "SELECT preferred_drinks FROM user_settings WHERE user_id = ?",
+        (current_user.id,)
+    ).fetchone()
+
+    db.close()
+
+    preferred = []
+
+    if row and row["preferred_drinks"]:
+        try:
+            preferred = json.loads(row["preferred_drinks"])
+        except:
+            preferred = []
+
+    return render_template("index.html", preferred=preferred)
+
+
+# =========================
 # 気圧取得
-# ----------------------------
+# =========================
 def fetch_pressure(lat, lon):
     url = (
         "https://api.open-meteo.com/v1/jma?"
@@ -61,9 +93,9 @@ def _find_now_index(labels):
     return best_i
 
 
-# ----------------------------
+# =========================
 # API
-# ----------------------------
+# =========================
 @login_required
 @pressure_bp.route("/api/pressure")
 def api_pressure():
@@ -78,32 +110,57 @@ def api_pressure():
     current_hpa = values[i_now]
     current_time = labels[i_now]
 
+    # =========================
+    # 3時間差（表示用復活）
+    # =========================
     delta_3h = None
     if i_now >= 3:
         delta_3h = round(values[i_now] - values[i_now - 3], 1)
 
-    danger = None
-    if len(values) >= 4:
-        best_i = 0
-        best_drop = 0
-        for i in range(len(values) - 3):
-            drop = values[i + 3] - values[i]
-            if drop < best_drop:
-                best_drop = drop
-                best_i = i
-        danger = {
-            "start": labels[best_i],
-            "end": labels[best_i + 3],
-            "delta_hpa": round(best_drop, 1)
-        }
+    # =========================
+    # 夜時間帯判定（15:00〜翌3:00）
+    # =========================
+    now = datetime.now()
+    current_hour = now.hour
+    is_night_mode = (current_hour >= 15 or current_hour <= 3)
 
+    danger = None
     risk = "安定"
-    if danger:
-        drop3 = abs(danger["delta_hpa"])
-        if drop3 >= 8:
-            risk = "警戒"
-        elif drop3 >= 4:
-            risk = "注意"
+
+    if is_night_mode:
+
+        # =========================
+        # 今から8時間の最大下降幅
+        # =========================
+        best_drop = 0
+        best_start = None
+        best_end = None
+
+        end_index = min(i_now + 8, len(values) - 1)
+
+        for i in range(i_now, end_index):
+            for j in range(i + 1, end_index + 1):
+                drop = values[j] - values[i]
+                if drop < best_drop:
+                    best_drop = drop
+                    best_start = labels[i]
+                    best_end = labels[j]
+
+        if best_start:
+            danger = {
+                "start": best_start,
+                "end": best_end,
+                "delta_hpa": round(best_drop, 1)
+            }
+
+            drop_abs = abs(best_drop)
+
+            if drop_abs >= 8:
+                risk = "警戒"
+            elif drop_abs >= 4:
+                risk = "注意"
+            else:
+                risk = "安定"
 
     return jsonify({
         "labels": labels,
@@ -112,5 +169,6 @@ def api_pressure():
         "current_time": current_time,
         "delta_3h": delta_3h,
         "danger_window": danger,
-        "risk": risk
+        "risk": risk,
+        "is_night_mode": is_night_mode
     })
