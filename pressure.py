@@ -77,7 +77,9 @@ def _calc_danger_window(labels, values):
         danger = {
             "start": labels[best_i],
             "end": labels[best_i + 3],
-            "delta_hpa": round(best_drop, 1)
+            "delta_hpa": round(best_drop, 1),
+            "start_i": best_i,          # ←追加
+            "end_i": best_i + 3         # ←追加
         }
     return danger
 # ----------------------------
@@ -119,6 +121,7 @@ def api_pressure():
         "labels": labels,
         "display_labels": display_labels,
         "values": values,
+        "i_now": i_now, 
         "current_hpa": current_hpa,
         "current_time": current_time,
         "delta_3h": delta_3h,

@@ -63,7 +63,9 @@ const values = Array.isArray(data.values) ? data.values : [];
     ========================== */
 
     const ctx = canvas.getContext("2d");
-
+    const nowIndex = Number.isInteger(data.i_now) ? data.i_now : null;
+    const dangerStart = Number.isInteger(data.danger_window?.start_i) ? data.danger_window.start_i : null;
+    const dangerEnd = Number.isInteger(data.danger_window?.end_i) ? data.danger_window.end_i : null;
     // 既存グラフがあれば破棄（メモリ対策）
     if (chartInstance) {
       chartInstance.destroy();
@@ -96,6 +98,35 @@ const values = Array.isArray(data.values) ? data.values : [];
         plugins: {
           legend: {
             display: true
+          },
+
+          annotation: {
+            annotations: {
+              // 🟨 要注意の時間帯：網掛け（帯）
+              dangerBox: (dangerStart != null && dangerEnd != null) ? {
+                type: "box",
+                xMin: dangerStart,
+                xMax: dangerEnd,
+                xScaleID: "x",
+                backgroundColor: "rgba(255, 193, 7, 0.18)",
+                borderWidth: 0
+              } : undefined,
+
+              // 🔴 現在の位置：縦線
+              nowLine: (nowIndex != null) ? {
+                type: "line",
+                xMin: nowIndex,
+                xMax: nowIndex,
+                xScaleID: "x",
+                borderColor: "rgba(220, 38, 38, 0.9)",
+                borderWidth: 2,
+                label: {
+                  display: true,
+                  content: "現在",
+                  position: "start"
+                }
+              } : undefined
+            }
           }
         },
 
@@ -107,6 +138,7 @@ const values = Array.isArray(data.values) ? data.values : [];
             }
           },
           x: {
+            type: "category",
             ticks: {
               maxTicksLimit: 6
             }
