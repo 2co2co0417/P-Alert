@@ -72,8 +72,14 @@
 
 {% block extra_js %}
 
+<script id="preferred-data" type="application/json">
+  {{ (preferred or []) | tojson }}
+</script>
+
 <script>
-  const preferredDrinks = {{ preferred|tojson }};
+  window.preferredDrinks = JSON.parse(
+    document.getElementById("preferred-data").textContent
+  );
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
