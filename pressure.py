@@ -245,7 +245,8 @@ def get_current_hpa(lat=34.07, lon=132.99):
     if i_now is None:
         return None
 
-    return values[i_now]    
-        "risk": risk,
-        "is_night_mode": is_night_mode
-    })
+    return {
+    "pressure": values[i_now],
+    "risk": risk,
+    "is_night_mode": is_night_mode
+}
