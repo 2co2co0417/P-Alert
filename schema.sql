@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "weather_logs" (
 	"created_at"	TEXT NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
-INSERT INTO "users" VALUES (1,'123@123.jp','pbkdf2:sha256:600000$JqelI4AZg9gLtUMD$69c63d4e303b2845014f31528dd3b49d417cdaa3edd4a75def658f6af335b962','2026-02-18T21:23:04');
+
 CREATE INDEX IF NOT EXISTS "idx_condition_logs_user_id" ON "condition_logs" (
 	"user_id"
 );
