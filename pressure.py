@@ -198,7 +198,8 @@ def api_pressure():
         "current_time": current_time,
         "delta_3h": delta_3h,
         "danger_window": danger,
-        "risk": risk
+        "risk": risk,
+        "is_night_mode": is_night_mode
     })
 
 def get_pressure_delta(lat=34.07, lon=132.99):
