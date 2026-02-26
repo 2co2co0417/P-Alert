@@ -7,7 +7,8 @@ import urllib.request
 import smtplib
 from email.mime.text import MIMEText
 import click
-
+from dotenv import load_dotenv
+load_dotenv()
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
